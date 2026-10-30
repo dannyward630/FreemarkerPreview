@@ -39,45 +39,9 @@ public final class SampleModelGenerator {
         this.collectionSize = Math.max(1, collectionSize);
     }
 
-    /** @param notes how types were inferred and what could not be analyzed, for display next to the model */
-    public record GeneratedModel(Map<String, Object> model, List<String> notes) {
-    }
-
-    public GeneratedModel generate(AnalysisResult analysis, TypeResolver resolver) {
-        Map<String, Object> model = new LinkedHashMap<>();
-        List<String> notes = new ArrayList<>();
-        for (Map.Entry<String, VariableShape> root : analysis.roots().entrySet()) {
-            String name = root.getKey();
-            VariableShape shape = root.getValue();
-            TypeResolver.Resolution resolution = resolver.resolve(name, shape);
-            TypeInfo type = resolution == null ? null : resolution.type();
-            if (resolution != null) {
-                notes.add(name + ": " + type.displayName() + " (" + resolution.origin() + ")");
-            } else if (shape.declaredType() != null) {
-                notes.add(name + ": declared type " + shape.declaredType() + " could not be resolved; using template-based sample data");
-            }
-            put(model, name, name, shape, type, 0, 1);
-        }
-        notes.addAll(analysis.warnings());
-        return new GeneratedModel(model, notes);
-    }
-
     /**
-     * @param key       the key in the model
-     * @param valueName the name used to pick a sample value (adds context, e.g. {@code companyName} for {@code company.name})
+     * {@code getInstitutionName} is named like {@code institutionName}.
      */
-    private void put(Map<String, Object> target, String key, String valueName, VariableShape shape,
-                     @Nullable TypeInfo type, int index, int depth) {
-        if (shape.has(Hint.DIRECTIVE)) {
-            target.put(DIRECTIVE_PREFIX + key, "");
-        } else if (shape.has(Hint.METHOD) && shape.methodResultOrNull() != null) {
-            target.put(key + METHOD_SUFFIX, value(shape.methodResultOrNull(), methodValueName(valueName), type, index, depth));
-        } else {
-            target.put(key, value(shape, valueName, type, index, depth));
-        }
-    }
-
-    /** {@code getInstitutionName} is named like {@code institutionName}. */
     private static String methodValueName(String method) {
         for (String prefix : List.of("get", "is", "find", "fetch", "lookup", "resolve", "compute", "format", "to")) {
             if (method.length() > prefix.length() && method.startsWith(prefix)
@@ -89,38 +53,13 @@ public final class SampleModelGenerator {
         return method;
     }
 
-    /** {@code company} + {@code name} gives {@code companyName}; multi-word keys such as {@code firstName} are kept. */
+    /**
+     * {@code company} + {@code name} gives {@code companyName}; multi-word keys such as {@code firstName} are kept.
+     */
     private static String contextualName(String parentName, String key) {
         return Names.words(key).size() == 1 && !Names.words(parentName).isEmpty()
                 ? parentName + Character.toUpperCase(key.charAt(0)) + key.substring(1)
                 : key;
-    }
-
-    private Object value(VariableShape shape, String name, @Nullable TypeInfo type, int index, int depth) {
-        if (depth > MAX_DEPTH) {
-            return SampleValues.string(name, index);
-        }
-        if (type != null && type.kind() != TypeInfo.Kind.UNKNOWN) {
-            Object typed = typed(shape, name, type, index, depth);
-            if (typed != null) {
-                return typed;
-            }
-        }
-        return fromShape(shape, name, index, depth);
-    }
-
-    private Object fromShape(VariableShape shape, String name, int index, int depth) {
-        boolean hasProperties = !shape.properties().isEmpty();
-        if (shape.has(Hint.KEY_VALUE_LISTED) && !hasProperties) {
-            return keyValues(shape, name, null, depth);
-        }
-        if (shape.has(Hint.SEQUENCE) || shape.elementOrNull() != null && !hasProperties) {
-            return list(shape.element(), shape.element().name(), null, depth);
-        }
-        if (hasProperties || shape.has(Hint.HASH)) {
-            return object(shape, name, null, index, depth);
-        }
-        return scalar(shape, name, index);
     }
 
     private static Object scalar(VariableShape shape, String name, int index) {
@@ -163,6 +102,67 @@ public final class SampleModelGenerator {
             }
         }
         return SampleValues.of(kind, name, index);
+    }
+
+    public GeneratedModel generate(AnalysisResult analysis, TypeResolver resolver) {
+        Map<String, Object> model = new LinkedHashMap<>();
+        List<String> notes = new ArrayList<>();
+        for (Map.Entry<String, VariableShape> root : analysis.roots().entrySet()) {
+            String name = root.getKey();
+            VariableShape shape = root.getValue();
+            TypeResolver.Resolution resolution = resolver.resolve(name, shape);
+            TypeInfo type = resolution == null ? null : resolution.type();
+            if (resolution != null) {
+                notes.add(name + ": " + type.displayName() + " (" + resolution.origin() + ")");
+            } else if (shape.declaredType() != null) {
+                notes.add(name + ": declared type " + shape.declaredType() + " could not be resolved; using template-based sample data");
+            }
+            put(model, name, name, shape, type, 0, 1);
+        }
+        notes.addAll(analysis.warnings());
+        return new GeneratedModel(model, notes);
+    }
+
+    /**
+     * @param key       the key in the model
+     * @param valueName the name used to pick a sample value (adds context, e.g. {@code companyName} for {@code company.name})
+     */
+    private void put(Map<String, Object> target, String key, String valueName, VariableShape shape,
+                     @Nullable TypeInfo type, int index, int depth) {
+        if (shape.has(Hint.DIRECTIVE)) {
+            target.put(DIRECTIVE_PREFIX + key, "");
+        } else if (shape.has(Hint.METHOD) && shape.methodResultOrNull() != null) {
+            target.put(key + METHOD_SUFFIX, value(shape.methodResultOrNull(), methodValueName(valueName), type, index, depth));
+        } else {
+            target.put(key, value(shape, valueName, type, index, depth));
+        }
+    }
+
+    private Object value(VariableShape shape, String name, @Nullable TypeInfo type, int index, int depth) {
+        if (depth > MAX_DEPTH) {
+            return SampleValues.string(name, index);
+        }
+        if (type != null && type.kind() != TypeInfo.Kind.UNKNOWN) {
+            Object typed = typed(shape, name, type, index, depth);
+            if (typed != null) {
+                return typed;
+            }
+        }
+        return fromShape(shape, name, index, depth);
+    }
+
+    private Object fromShape(VariableShape shape, String name, int index, int depth) {
+        boolean hasProperties = !shape.properties().isEmpty();
+        if (shape.has(Hint.KEY_VALUE_LISTED) && !hasProperties) {
+            return keyValues(shape, name, null, depth);
+        }
+        if (shape.has(Hint.SEQUENCE) || shape.elementOrNull() != null && !hasProperties) {
+            return list(shape.element(), shape.element().name(), null, depth);
+        }
+        if (hasProperties || shape.has(Hint.HASH)) {
+            return object(shape, name, null, index, depth);
+        }
+        return scalar(shape, name, index);
     }
 
     private @Nullable Object typed(VariableShape shape, String name, TypeInfo type, int index, int depth) {
@@ -214,5 +214,11 @@ public final class SampleModelGenerator {
             map.put(map.containsKey(key) ? key + " " + (i + 1) : key, value(shape.element(), valueName, valueType, i, depth + 1));
         }
         return map;
+    }
+
+    /**
+     * @param notes how types were inferred and what could not be analyzed, for display next to the model
+     */
+    public record GeneratedModel(Map<String, Object> model, List<String> notes) {
     }
 }

@@ -8,7 +8,9 @@ import ke.co.scedar.plugins.freemarker.preview.ide.PreviewSettings;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.PreviewController;
 import org.jetbrains.annotations.NotNull;
 
-/** Allows or blocks images, stylesheets and fonts referenced by http(s) URLs in all previews. */
+/**
+ * Allows or blocks images, stylesheets and fonts referenced by http(s) URLs in all previews.
+ */
 public final class ToggleRemoteResourcesAction extends ToggleAction implements DumbAware {
 
     @Override

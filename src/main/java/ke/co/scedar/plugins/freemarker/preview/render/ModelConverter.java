@@ -1,30 +1,13 @@
 package ke.co.scedar.plugins.freemarker.preview.render;
 
 import freemarker.core.Environment;
-import freemarker.template.SimpleScalar;
-import freemarker.template.TemplateDateModel;
-import freemarker.template.TemplateDirectiveBody;
-import freemarker.template.TemplateDirectiveModel;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.TemplateMethodModelEx;
-import freemarker.template.TemplateModel;
-import freemarker.template.TemplateModelException;
-import freemarker.template.TemplateNumberModel;
-import freemarker.template.TemplateScalarModel;
+import freemarker.template.*;
 import ke.co.scedar.plugins.freemarker.preview.model.SampleModelGenerator;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -77,6 +60,16 @@ public final class ModelConverter {
             return new SampleNumber(n);
         }
         return value;
+    }
+
+    private static java.math.BigDecimal decimal(Number n) {
+        if (n instanceof java.math.BigDecimal d) {
+            return d;
+        }
+        if (n instanceof Double || n instanceof Float) {
+            return java.math.BigDecimal.valueOf(n.doubleValue());
+        }
+        return new java.math.BigDecimal(n.toString());
     }
 
     /**
@@ -176,6 +169,10 @@ public final class ModelConverter {
             this.self = self;
         }
 
+        private static Object result(Object value) {
+            return value instanceof Number n ? new SampleNumber(n) : new SimpleScalar(String.valueOf(value));
+        }
+
         @Override
         public Object exec(@SuppressWarnings("rawtypes") List arguments) throws TemplateModelException {
             try {
@@ -222,10 +219,6 @@ public final class ModelConverter {
             return self.divide(divisor, java.math.MathContext.DECIMAL64);
         }
 
-        private static Object result(Object value) {
-            return value instanceof Number n ? new SampleNumber(n) : new SimpleScalar(String.valueOf(value));
-        }
-
         private java.math.BigDecimal number(List<?> arguments, int index) throws TemplateModelException {
             if (arguments.size() <= index) {
                 throw new TemplateModelException(name + "(...) needs " + (index + 1) + " argument(s)");
@@ -244,7 +237,9 @@ public final class ModelConverter {
             throw new TemplateModelException(name + "(...) expects a number as argument " + (index + 1));
         }
 
-        /** {@code "roundHalfUp"}, {@code "HALF_UP"}, or a legacy {@code BigDecimal.ROUND_*} int. */
+        /**
+         * {@code "roundHalfUp"}, {@code "HALF_UP"}, or a legacy {@code BigDecimal.ROUND_*} int.
+         */
         private java.math.RoundingMode rounding(Object argument) throws TemplateModelException {
             if (argument instanceof TemplateNumberModel number) {
                 return java.math.RoundingMode.valueOf(number.getAsNumber().intValue());
@@ -265,17 +260,9 @@ public final class ModelConverter {
         }
     }
 
-    private static java.math.BigDecimal decimal(Number n) {
-        if (n instanceof java.math.BigDecimal d) {
-            return d;
-        }
-        if (n instanceof Double || n instanceof Float) {
-            return java.math.BigDecimal.valueOf(n.doubleValue());
-        }
-        return new java.math.BigDecimal(n.toString());
-    }
-
-    /** Stands in for a method: returns the sample value regardless of the arguments. */
+    /**
+     * Stands in for a method: returns the sample value regardless of the arguments.
+     */
     static final class MethodStub implements TemplateMethodModelEx {
         private final Object result;
 
@@ -289,7 +276,9 @@ public final class ModelConverter {
         }
     }
 
-    /** Stands in for a user-defined directive: prints its sample text, then renders the nested content once. */
+    /**
+     * Stands in for a user-defined directive: prints its sample text, then renders the nested content once.
+     */
     static final class DirectiveStub implements TemplateDirectiveModel {
         private final String output;
 

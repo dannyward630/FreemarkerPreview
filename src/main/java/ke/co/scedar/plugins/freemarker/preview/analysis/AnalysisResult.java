@@ -20,10 +20,10 @@ public record AnalysisResult(Map<String, VariableShape> roots,
                              List<String> templates,
                              @Nullable ParseFailure parseError) {
 
-    public record ParseFailure(String message, int line, int column) {
-    }
-
     public boolean isSuccessful() {
         return parseError == null;
+    }
+
+    public record ParseFailure(String message, int line, int column) {
     }
 }

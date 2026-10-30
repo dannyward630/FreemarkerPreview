@@ -5,7 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/** Resolves {@code #include}/{@code #import} paths the way FreeMarker does, but refuses anything outside the root. */
+/**
+ * Resolves {@code #include}/{@code #import} paths the way FreeMarker does, but refuses anything outside the root.
+ */
 public final class TemplatePaths {
 
     private TemplatePaths() {
@@ -32,7 +34,9 @@ public final class TemplatePaths {
         return normalize(combined);
     }
 
-    /** Normalizes a path, returning {@code null} if a {@code ..} segment would leave the root. */
+    /**
+     * Normalizes a path, returning {@code null} if a {@code ..} segment would leave the root.
+     */
     public static @Nullable String normalize(String path) {
         Deque<String> segments = new ArrayDeque<>();
         for (String segment : path.split("/")) {

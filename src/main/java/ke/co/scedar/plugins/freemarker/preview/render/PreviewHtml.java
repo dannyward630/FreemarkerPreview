@@ -19,32 +19,29 @@ import java.util.regex.Pattern;
  */
 public final class PreviewHtml {
 
-    /** Colors used for the plugin's own pages (diagnostics, empty state); rendered output keeps its own styling. */
-    public record Theme(String background, String foreground, String muted, String border, String codeBackground,
-                        String highlight, String error, String accent) {
-        public static Theme light() {
-            return new Theme("#ffffff", "#1f2328", "#6a737d", "#d0d7de", "#f6f8fa", "#ffebe9", "#cf222e", "#0969da");
-        }
-
-        public static Theme dark() {
-            return new Theme("#1e1f22", "#dfe1e5", "#8c8f94", "#393b40", "#2b2d30", "#4a2b2b", "#f75464", "#548af7");
-        }
-    }
-
     private static final Pattern HEAD = Pattern.compile("<head(\\s[^>]*)?>", Pattern.CASE_INSENSITIVE);
     private static final Pattern HTML = Pattern.compile("<html(\\s[^>]*)?>", Pattern.CASE_INSENSITIVE);
     private static final Pattern DOCTYPE = Pattern.compile("<!doctype[^>]*>", Pattern.CASE_INSENSITIVE);
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String SCROLL_KEEPER = "(function(){var k='fmp-scroll:';try{if(window.name.indexOf(k)===0){"
+            + "var p=window.name.substring(k.length).split(',');var go=function(){window.scrollTo(+p[0],+p[1]);};"
+            + "document.addEventListener('DOMContentLoaded',go);window.addEventListener('load',go);}}catch(e){}"
+            + "window.addEventListener('scroll',function(){window.name=k+window.scrollX+','+window.scrollY;},"
+            + "{passive:true});})();";
 
     private PreviewHtml() {
     }
 
-    /** The page for a successful render. */
+    /**
+     * The page for a successful render.
+     */
     public static String forResult(RenderResult.Success success) {
         return forResult(success, false);
     }
 
-    /** @param allowRemote whether images, stylesheets and fonts may load from {@code http(s)} URLs */
+    /**
+     * @param allowRemote whether images, stylesheets and fonts may load from {@code http(s)} URLs
+     */
     public static String forResult(RenderResult.Success success, boolean allowRemote) {
         return switch (success.kind()) {
             case HTML -> sandbox(success.output(), allowRemote);
@@ -55,12 +52,16 @@ public final class PreviewHtml {
         };
     }
 
-    /** Injects a Content-Security-Policy without remote resources, and the scroll keeper. */
+    /**
+     * Injects a Content-Security-Policy without remote resources, and the scroll keeper.
+     */
     public static String sandbox(String html) {
         return sandbox(html, false);
     }
 
-    /** Injects the Content-Security-Policy and the scroll keeper into an HTML document or fragment. */
+    /**
+     * Injects the Content-Security-Policy and the scroll keeper into an HTML document or fragment.
+     */
     public static String sandbox(String html, boolean allowRemote) {
         String nonce = nonce();
         String remote = allowRemote ? " https: http:" : "";
@@ -84,12 +85,6 @@ public final class PreviewHtml {
         }
         return inject + html;
     }
-
-    private static final String SCROLL_KEEPER = "(function(){var k='fmp-scroll:';try{if(window.name.indexOf(k)===0){"
-            + "var p=window.name.substring(k.length).split(',');var go=function(){window.scrollTo(+p[0],+p[1]);};"
-            + "document.addEventListener('DOMContentLoaded',go);window.addEventListener('load',go);}}catch(e){}"
-            + "window.addEventListener('scroll',function(){window.name=k+window.scrollX+','+window.scrollY;},"
-            + "{passive:true});})();";
 
     public static String forDiagnostic(RenderDiagnostic d, Theme theme) {
         StringBuilder body = new StringBuilder();
@@ -119,7 +114,9 @@ public final class PreviewHtml {
         return page(theme, body.toString());
     }
 
-    /** A neutral informational page (empty state, unsupported environment, ...). */
+    /**
+     * A neutral informational page (empty state, unsupported environment, ...).
+     */
     public static String message(String title, String text, @Nullable List<String> details, Theme theme) {
         StringBuilder body = new StringBuilder("<div class=\"empty\"><h1>").append(escape(title)).append("</h1><p>")
                 .append(escape(text)).append("</p>");
@@ -179,5 +176,19 @@ public final class PreviewHtml {
         byte[] bytes = new byte[18];
         RANDOM.nextBytes(bytes);
         return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    /**
+     * Colors used for the plugin's own pages (diagnostics, empty state); rendered output keeps its own styling.
+     */
+    public record Theme(String background, String foreground, String muted, String border, String codeBackground,
+                        String highlight, String error, String accent) {
+        public static Theme light() {
+            return new Theme("#ffffff", "#1f2328", "#6a737d", "#d0d7de", "#f6f8fa", "#ffebe9", "#cf222e", "#0969da");
+        }
+
+        public static Theme dark() {
+            return new Theme("#1e1f22", "#dfe1e5", "#8c8f94", "#393b40", "#2b2d30", "#4a2b2b", "#f75464", "#548af7");
+        }
     }
 }

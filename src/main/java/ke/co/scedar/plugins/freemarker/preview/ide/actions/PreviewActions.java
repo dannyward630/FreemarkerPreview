@@ -11,7 +11,9 @@ import ke.co.scedar.plugins.freemarker.preview.ide.editor.FreeMarkerSplitEditor;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.PreviewController;
 import org.jetbrains.annotations.Nullable;
 
-/** Finds the split editor an action applies to (from the toolbar, the editor, or the selected file). */
+/**
+ * Finds the split editor an action applies to (from the toolbar, the editor, or the selected file).
+ */
 final class PreviewActions {
 
     private PreviewActions() {

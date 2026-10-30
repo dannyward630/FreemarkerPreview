@@ -6,7 +6,9 @@ import com.intellij.openapi.project.DumbAwareAction;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.PreviewController;
 import org.jetbrains.annotations.NotNull;
 
-/** Discards custom sample data and generates it again from the template. */
+/**
+ * Discards custom sample data and generates it again from the template.
+ */
 public final class RegenerateSampleDataAction extends DumbAwareAction {
 
     @Override

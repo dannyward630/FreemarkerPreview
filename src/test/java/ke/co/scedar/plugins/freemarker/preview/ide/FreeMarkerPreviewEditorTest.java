@@ -27,9 +27,12 @@ import java.util.function.Predicate;
 public class FreeMarkerPreviewEditorTest extends LightJavaCodeInsightFixtureTestCase {
 
     private static final long TIMEOUT_MS = 30_000;
-
-    private FreeMarkerSplitEditor editor;
     private final BlockingQueue<RenderResult> results = new LinkedBlockingQueue<>();
+    private FreeMarkerSplitEditor editor;
+
+    private static Predicate<RenderResult> successContaining(String text) {
+        return r -> r instanceof RenderResult.Success s && s.output().contains(text);
+    }
 
     @Override
     protected void tearDown() throws Exception {
@@ -79,10 +82,6 @@ public class FreeMarkerPreviewEditorTest extends LightJavaCodeInsightFixtureTest
         }
         fail("No matching render result; last was " + last);
         return null;
-    }
-
-    private static Predicate<RenderResult> successContaining(String text) {
-        return r -> r instanceof RenderResult.Success s && s.output().contains(text);
     }
 
     private void setText(VirtualFile file, String text) {

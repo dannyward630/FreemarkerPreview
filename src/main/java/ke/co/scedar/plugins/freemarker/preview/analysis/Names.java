@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/** Small English-name helpers used to name list items and to pick realistic sample values. */
+/**
+ * Small English-name helpers used to name list items and to pick realistic sample values.
+ */
 public final class Names {
 
     private static final Map<String, String> IRREGULAR = Map.of(
@@ -17,7 +19,9 @@ public final class Names {
     private Names() {
     }
 
-    /** {@code orders -> order}, {@code categories -> category}, {@code orderList -> order}, {@code data -> datum}. */
+    /**
+     * {@code orders -> order}, {@code categories -> category}, {@code orderList -> order}, {@code data -> datum}.
+     */
     public static String singular(String name) {
         String lower = name.toLowerCase(Locale.ROOT);
         String irregular = IRREGULAR.get(lower);
@@ -43,7 +47,9 @@ public final class Names {
         return name + "Item";
     }
 
-    /** Splits {@code customerName}, {@code customer_name} or {@code CUSTOMER-NAME} into lower-case words. */
+    /**
+     * Splits {@code customerName}, {@code customer_name} or {@code CUSTOMER-NAME} into lower-case words.
+     */
     public static List<String> words(String name) {
         List<String> words = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -66,7 +72,9 @@ public final class Names {
         return words;
     }
 
-    /** {@code orderNote -> "Order note"}. */
+    /**
+     * {@code orderNote -> "Order note"}.
+     */
     public static String humanize(String name) {
         List<String> words = words(name);
         if (words.isEmpty()) {

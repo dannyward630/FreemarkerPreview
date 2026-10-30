@@ -33,6 +33,26 @@ final class SafeTemplateLoader implements TemplateLoader {
         this.source = source;
     }
 
+    /**
+     * For {@code a/b/f/x.ftl}: {@code a/f/x.ftl}, {@code f/x.ftl}, {@code a/x.ftl}, {@code x.ftl}. Longer trailing paths
+     * come first, then the nearest ancestor.
+     */
+    static List<String> ancestorCandidates(String name) {
+        String[] segments = name.split("/");
+        List<String> candidates = new ArrayList<>();
+        for (int tailStart = 1; tailStart < segments.length; tailStart++) {
+            String tail = String.join("/", java.util.Arrays.copyOfRange(segments, tailStart, segments.length));
+            for (int prefixEnd = tailStart - 1; prefixEnd >= 0; prefixEnd--) {
+                String prefix = String.join("/", java.util.Arrays.copyOfRange(segments, 0, prefixEnd));
+                String candidate = prefix.isEmpty() ? tail : prefix + "/" + tail;
+                if (!candidate.equals(name) && !candidates.contains(candidate)) {
+                    candidates.add(candidate);
+                }
+            }
+        }
+        return candidates;
+    }
+
     @Override
     public Object findTemplateSource(String name) throws IOException {
         String normalized = TemplatePaths.normalize(name);
@@ -61,29 +81,11 @@ final class SafeTemplateLoader implements TemplateLoader {
         return text;
     }
 
-    /** Requested name to the name actually loaded, for templates found by the ancestor fallback. */
+    /**
+     * Requested name to the name actually loaded, for templates found by the ancestor fallback.
+     */
     Map<String, String> fallbacks() {
         return Map.copyOf(fallbacks);
-    }
-
-    /**
-     * For {@code a/b/f/x.ftl}: {@code a/f/x.ftl}, {@code f/x.ftl}, {@code a/x.ftl}, {@code x.ftl}. Longer trailing paths
-     * come first, then the nearest ancestor.
-     */
-    static List<String> ancestorCandidates(String name) {
-        String[] segments = name.split("/");
-        List<String> candidates = new ArrayList<>();
-        for (int tailStart = 1; tailStart < segments.length; tailStart++) {
-            String tail = String.join("/", java.util.Arrays.copyOfRange(segments, tailStart, segments.length));
-            for (int prefixEnd = tailStart - 1; prefixEnd >= 0; prefixEnd--) {
-                String prefix = String.join("/", java.util.Arrays.copyOfRange(segments, 0, prefixEnd));
-                String candidate = prefix.isEmpty() ? tail : prefix + "/" + tail;
-                if (!candidate.equals(name) && !candidates.contains(candidate)) {
-                    candidates.add(candidate);
-                }
-            }
-        }
-        return candidates;
     }
 
     @Override

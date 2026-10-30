@@ -21,9 +21,8 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.TestOnly;
 
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.function.Consumer;
@@ -85,7 +84,18 @@ final class SampleDataPanel extends JPanel {
         setCustom(false);
     }
 
-    /** Replaces the text without treating it as a user edit. */
+    private static FileType jsonFileType() {
+        FileType type = FileTypeManager.getInstance().getFileTypeByExtension("json");
+        return type instanceof UnknownFileType ? PlainTextFileType.INSTANCE : type;
+    }
+
+    String getText() {
+        return document.getText();
+    }
+
+    /**
+     * Replaces the text without treating it as a user edit.
+     */
     void setText(String text) {
         if (text.equals(document.getText())) {
             return;
@@ -96,10 +106,6 @@ final class SampleDataPanel extends JPanel {
         } finally {
             updatingProgrammatically = false;
         }
-    }
-
-    String getText() {
-        return document.getText();
     }
 
     void setCustom(boolean custom) {
@@ -132,14 +138,11 @@ final class SampleDataPanel extends JPanel {
         notesLabel.setVisible(true);
     }
 
-    /** Replaces the text as if the user had typed it. */
+    /**
+     * Replaces the text as if the user had typed it.
+     */
     @TestOnly
     void setTextAsUser(String text) {
         WriteAction.run(() -> document.setText(text));
-    }
-
-    private static FileType jsonFileType() {
-        FileType type = FileTypeManager.getInstance().getFileTypeByExtension("json");
-        return type instanceof UnknownFileType ? PlainTextFileType.INSTANCE : type;
     }
 }

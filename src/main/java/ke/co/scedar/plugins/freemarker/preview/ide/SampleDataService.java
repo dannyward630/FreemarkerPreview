@@ -1,10 +1,6 @@
 package ke.co.scedar.plugins.freemarker.preview.ide;
 
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.Service;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
+import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +17,10 @@ import java.util.TreeMap;
 @State(name = "FreeMarkerPreviewSampleData", storages = @Storage(StoragePathMacros.WORKSPACE_FILE))
 public final class SampleDataService implements PersistentStateComponent<SampleDataService.PersistedState> {
 
-    /** Larger edits are kept for the session but not persisted, to keep the workspace file small. */
+    /**
+     * Larger edits are kept for the session but not persisted, to keep the workspace file small.
+     */
     static final int MAX_PERSISTED_CHARS = 200_000;
-
-    public static final class PersistedState {
-        public Map<String, String> customSampleData = new TreeMap<>();
-    }
-
     private PersistedState state = new PersistedState();
 
     public static SampleDataService getInstance(Project project) {
@@ -58,5 +51,9 @@ public final class SampleDataService implements PersistentStateComponent<SampleD
 
     public synchronized void remove(VirtualFile file) {
         state.customSampleData.remove(file.getUrl());
+    }
+
+    public static final class PersistedState {
+        public Map<String, String> customSampleData = new TreeMap<>();
     }
 }

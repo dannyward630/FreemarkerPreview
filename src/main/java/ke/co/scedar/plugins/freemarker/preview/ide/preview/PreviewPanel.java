@@ -12,12 +12,13 @@ import ke.co.scedar.plugins.freemarker.preview.render.PreviewHtml;
 import ke.co.scedar.plugins.freemarker.preview.render.RenderDiagnostic;
 import ke.co.scedar.plugins.freemarker.preview.render.RenderResult;
 
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
-/** The right-hand side of the split editor: status line, rendered page and the sample-data editor. */
+/**
+ * The right-hand side of the split editor: status line, rendered page and the sample-data editor.
+ */
 final class PreviewPanel extends JPanel implements Disposable {
 
     private static final String SAMPLE_DATA_VISIBLE_KEY = "FreeMarkerPreview.sampleDataVisible";
@@ -44,6 +45,10 @@ final class PreviewPanel extends JPanel implements Disposable {
         showMessage("Preparing preview…", "The template is being analyzed.", List.of());
     }
 
+    private static PreviewHtml.Theme theme() {
+        return JBColor.isBright() ? PreviewHtml.Theme.light() : PreviewHtml.Theme.dark();
+    }
+
     JComponent preferredFocus() {
         return browser.component();
     }
@@ -63,7 +68,9 @@ final class PreviewPanel extends JPanel implements Disposable {
         showResult(result, customData, null);
     }
 
-    /** @param pathWarning shown in the status line, e.g. when a fragment was found only by the lenient path fallback */
+    /**
+     * @param pathWarning shown in the status line, e.g. when a fragment was found only by the lenient path fallback
+     */
     void showResult(RenderResult result, boolean customData, @org.jetbrains.annotations.Nullable String pathWarning) {
         String data = customData ? "custom sample data" : "generated sample data";
         if (result instanceof RenderResult.Success success && pathWarning != null) {
@@ -102,10 +109,6 @@ final class PreviewPanel extends JPanel implements Disposable {
 
     PreviewBrowser browser() {
         return browser;
-    }
-
-    private static PreviewHtml.Theme theme() {
-        return JBColor.isBright() ? PreviewHtml.Theme.light() : PreviewHtml.Theme.dark();
     }
 
     @Override

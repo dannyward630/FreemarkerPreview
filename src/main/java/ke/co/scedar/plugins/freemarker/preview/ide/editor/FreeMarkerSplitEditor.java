@@ -8,7 +8,9 @@ import com.intellij.openapi.fileEditor.TextEditorWithPreview;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.FreeMarkerPreviewFileEditor;
 import org.jetbrains.annotations.NotNull;
 
-/** Source on the left, preview on the right, with the preview actions in the editor toolbar. */
+/**
+ * Source on the left, preview on the right, with the preview actions in the editor toolbar.
+ */
 public final class FreeMarkerSplitEditor extends TextEditorWithPreview {
 
     public static final String TOOLBAR_GROUP_ID = "FreeMarkerPreview.EditorToolbar";

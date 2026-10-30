@@ -1,11 +1,6 @@
 package ke.co.scedar.plugins.freemarker.preview.render;
 
-import freemarker.core.FtlAstAccess;
-import freemarker.core.HTMLOutputFormat;
-import freemarker.core.OutputFormat;
-import freemarker.core.ParseException;
-import freemarker.core.XHTMLOutputFormat;
-import freemarker.core.XMLOutputFormat;
+import freemarker.core.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateNotFoundException;
@@ -36,92 +31,17 @@ public final class TemplateRenderer {
 
     private static final Pattern MARKUP = Pattern.compile("<\\s*[A-Za-z!/][^>]*>");
     private static final int EXCERPT_RADIUS = 3;
-
-    /** Used when no scheduler is supplied (outside the IDE, e.g. in plain unit tests). */
-    private static final class DefaultScheduler {
-        static final ScheduledExecutorService INSTANCE = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "FreeMarker Preview watchdog");
-            t.setDaemon(true);
-            return t;
-        });
-    }
-
     private final ScheduledExecutorService scheduler;
 
     public TemplateRenderer() {
         this(null);
     }
 
-    /** @param scheduler schedules the timeout watchdog; inside the IDE, the application's shared scheduler */
+    /**
+     * @param scheduler schedules the timeout watchdog; inside the IDE, the application's shared scheduler
+     */
     public TemplateRenderer(@Nullable ScheduledExecutorService scheduler) {
         this.scheduler = scheduler;
-    }
-
-    public RenderResult render(RenderRequest request) {
-        long start = System.nanoTime();
-        TemplateSource source = request.source().overlay(request.templateName(), request.templateText());
-        PreviewConfiguration configuration = new PreviewConfiguration(source, true);
-        Watchdog watchdog = new Watchdog(scheduler == null ? DefaultScheduler.INSTANCE : scheduler,
-                Thread.currentThread(), request.timeout().toMillis());
-        try {
-            Template template = configuration.getTemplate(request.templateName());
-            LimitedWriter out = new LimitedWriter(request.maxOutputChars());
-            template.process(ModelConverter.toDataModel(request.sampleData()), out);
-            if (watchdog.stop()) {
-                return timeout(request);
-            }
-            String output = out.toString();
-            return new RenderResult.Success(output, outputKind(template.getOutputFormat(), output),
-                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
-        } catch (ParseException e) {
-            watchdog.stop();
-            return failure(new RenderDiagnostic(Kind.TEMPLATE_SYNTAX, "Template syntax error", e.getEditorMessage(),
-                    nameOr(e.getTemplateName(), request.templateName()), e.getLineNumber(), e.getColumnNumber(),
-                    null, excerpt(source, nameOr(e.getTemplateName(), request.templateName()), e.getLineNumber()),
-                    "The editor keeps working; the preview updates as soon as the template parses again."));
-        } catch (TemplateException e) {
-            boolean timedOut = watchdog.stop();
-            if (timedOut) {
-                return timeout(request);
-            }
-            if (isCancellation(e)) {
-                return cancelled();
-            }
-            return failure(renderingError(e, source, request.templateName()));
-        } catch (LimitedWriter.LimitExceededException e) {
-            watchdog.stop();
-            return failure(RenderDiagnostic.simple(Kind.OUTPUT_TOO_LARGE, "Output too large",
-                    "Rendering stopped after " + request.maxOutputChars() + " characters of output.",
-                    "Check for unbounded loops such as <#list 1.. as i> or very large sample collections."));
-        } catch (TemplateNotFoundException e) {
-            watchdog.stop();
-            return failure(RenderDiagnostic.simple(Kind.MISSING_TEMPLATE, "Template not found",
-                    String.valueOf(e.getMessage()), null));
-        } catch (IOException e) {
-            watchdog.stop();
-            return failure(RenderDiagnostic.simple(Kind.INTERNAL, "Could not read a template",
-                    String.valueOf(e.getMessage()), null));
-        } catch (StackOverflowError e) {
-            watchdog.stop();
-            return failure(RenderDiagnostic.simple(Kind.RENDERING, "Recursion too deep",
-                    "The template recursed too deeply (for example a macro or include that calls itself without end).",
-                    "Add a stop condition to the recursive macro or include."));
-        } catch (RuntimeException e) {
-            boolean timedOut = watchdog.stop();
-            if (timedOut) {
-                return timeout(request);
-            }
-            if (isCancellation(e)) {
-                return cancelled();
-            }
-            return failure(RenderDiagnostic.simple(Kind.INTERNAL, "Unexpected rendering failure",
-                    e.getClass().getSimpleName() + ": " + e.getMessage(), null));
-        } finally {
-            watchdog.stop();
-            if (watchdog.fired()) {
-                Thread.interrupted(); // never leak our own interrupt to a pooled thread
-            }
-        }
     }
 
     private static RenderDiagnostic renderingError(TemplateException e, TemplateSource source, String mainName) {
@@ -206,7 +126,87 @@ public final class TemplateRenderer {
         return excerpt;
     }
 
-    /** Interrupts the rendering thread once the timeout elapses, unless stopped first. */
+    public RenderResult render(RenderRequest request) {
+        long start = System.nanoTime();
+        TemplateSource source = request.source().overlay(request.templateName(), request.templateText());
+        PreviewConfiguration configuration = new PreviewConfiguration(source, true);
+        Watchdog watchdog = new Watchdog(scheduler == null ? DefaultScheduler.INSTANCE : scheduler,
+                Thread.currentThread(), request.timeout().toMillis());
+        try {
+            Template template = configuration.getTemplate(request.templateName());
+            LimitedWriter out = new LimitedWriter(request.maxOutputChars());
+            template.process(ModelConverter.toDataModel(request.sampleData()), out);
+            if (watchdog.stop()) {
+                return timeout(request);
+            }
+            String output = out.toString();
+            return new RenderResult.Success(output, outputKind(template.getOutputFormat(), output),
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+        } catch (ParseException e) {
+            watchdog.stop();
+            return failure(new RenderDiagnostic(Kind.TEMPLATE_SYNTAX, "Template syntax error", e.getEditorMessage(),
+                    nameOr(e.getTemplateName(), request.templateName()), e.getLineNumber(), e.getColumnNumber(),
+                    null, excerpt(source, nameOr(e.getTemplateName(), request.templateName()), e.getLineNumber()),
+                    "The editor keeps working; the preview updates as soon as the template parses again."));
+        } catch (TemplateException e) {
+            boolean timedOut = watchdog.stop();
+            if (timedOut) {
+                return timeout(request);
+            }
+            if (isCancellation(e)) {
+                return cancelled();
+            }
+            return failure(renderingError(e, source, request.templateName()));
+        } catch (LimitedWriter.LimitExceededException e) {
+            watchdog.stop();
+            return failure(RenderDiagnostic.simple(Kind.OUTPUT_TOO_LARGE, "Output too large",
+                    "Rendering stopped after " + request.maxOutputChars() + " characters of output.",
+                    "Check for unbounded loops such as <#list 1.. as i> or very large sample collections."));
+        } catch (TemplateNotFoundException e) {
+            watchdog.stop();
+            return failure(RenderDiagnostic.simple(Kind.MISSING_TEMPLATE, "Template not found",
+                    String.valueOf(e.getMessage()), null));
+        } catch (IOException e) {
+            watchdog.stop();
+            return failure(RenderDiagnostic.simple(Kind.INTERNAL, "Could not read a template",
+                    String.valueOf(e.getMessage()), null));
+        } catch (StackOverflowError e) {
+            watchdog.stop();
+            return failure(RenderDiagnostic.simple(Kind.RENDERING, "Recursion too deep",
+                    "The template recursed too deeply (for example a macro or include that calls itself without end).",
+                    "Add a stop condition to the recursive macro or include."));
+        } catch (RuntimeException e) {
+            boolean timedOut = watchdog.stop();
+            if (timedOut) {
+                return timeout(request);
+            }
+            if (isCancellation(e)) {
+                return cancelled();
+            }
+            return failure(RenderDiagnostic.simple(Kind.INTERNAL, "Unexpected rendering failure",
+                    e.getClass().getSimpleName() + ": " + e.getMessage(), null));
+        } finally {
+            watchdog.stop();
+            if (watchdog.fired()) {
+                Thread.interrupted(); // never leak our own interrupt to a pooled thread
+            }
+        }
+    }
+
+    /**
+     * Used when no scheduler is supplied (outside the IDE, e.g. in plain unit tests).
+     */
+    private static final class DefaultScheduler {
+        static final ScheduledExecutorService INSTANCE = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "FreeMarker Preview watchdog");
+            t.setDaemon(true);
+            return t;
+        });
+    }
+
+    /**
+     * Interrupts the rendering thread once the timeout elapses, unless stopped first.
+     */
     private static final class Watchdog {
         private final Thread thread;
         private final ScheduledFuture<?> future;
@@ -225,7 +225,9 @@ public final class TemplateRenderer {
             }
         }
 
-        /** @return whether the timeout fired before rendering finished */
+        /**
+         * @return whether the timeout fired before rendering finished
+         */
         synchronized boolean stop() {
             stopped = true;
             future.cancel(false);
@@ -237,17 +239,12 @@ public final class TemplateRenderer {
         }
     }
 
-    /** Collects output and fails once it grows beyond the limit. */
+    /**
+     * Collects output and fails once it grows beyond the limit.
+     */
     static final class LimitedWriter extends Writer {
-        static final class LimitExceededException extends IOException {
-            LimitExceededException() {
-                super("Output limit exceeded");
-            }
-        }
-
         private final StringBuilder buffer = new StringBuilder();
         private final int limit;
-
         LimitedWriter(int limit) {
             this.limit = limit;
         }
@@ -279,6 +276,12 @@ public final class TemplateRenderer {
         @Override
         public String toString() {
             return buffer.toString();
+        }
+
+        static final class LimitExceededException extends IOException {
+            LimitExceededException() {
+                super("Output limit exceeded");
+            }
         }
     }
 }

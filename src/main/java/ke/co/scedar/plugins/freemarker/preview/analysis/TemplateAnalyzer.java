@@ -11,16 +11,7 @@ import ke.co.scedar.plugins.freemarker.preview.engine.TemplateSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +48,9 @@ public final class TemplateAnalyzer {
             "size", "first", "last", "join", "seq_contains", "seq_index_of", "seq_last_index_of", "sort", "sort_by",
             "reverse", "chunk", "filter", "map", "take_while", "drop_while", "min", "max", "sequence",
             "seqContains", "seqIndexOf", "seqLastIndexOf", "sortBy", "takeWhile", "dropWhile");
-    /** Built-ins whose result is the same sequence (possibly reordered or filtered). */
+    /**
+     * Built-ins whose result is the same sequence (possibly reordered or filtered).
+     */
     private static final Set<String> SAME_SEQUENCE_BUILT_INS = Set.of(
             "sort", "sort_by", "sortBy", "reverse", "filter", "take_while", "takeWhile", "drop_while", "dropWhile",
             "sequence");
@@ -76,9 +69,16 @@ public final class TemplateAnalyzer {
     private static final Set<String> NUMBER_ARGUMENT_METHODS = Set.of("divide", "multiply", "add", "subtract",
             "remainder", "compareTo", "max", "min");
 
-    /** Built-ins that pass the value through unchanged. */
+    /**
+     * Built-ins that pass the value through unchanged.
+     */
     private static final Set<String> PASS_THROUGH_BUILT_INS = Set.of("no_esc", "noEsc", "esc", "if_exists",
             "ifExists", "default");
+
+    private static AnalysisResult failure(String message, int line, int column) {
+        return new AnalysisResult(Map.of(), Map.of(), List.of(), List.of(),
+                new AnalysisResult.ParseFailure(message, line, column));
+    }
 
     /**
      * Analyzes {@code text} as the template named {@code templateName} (root-relative, used to resolve relative
@@ -101,12 +101,9 @@ public final class TemplateAnalyzer {
                 List.copyOf(walker.templates), null);
     }
 
-    private static AnalysisResult failure(String message, int line, int column) {
-        return new AnalysisResult(Map.of(), Map.of(), List.of(), List.of(),
-                new AnalysisResult.ParseFailure(message, line, column));
-    }
-
-    /** A lexical scope; a {@code null} shape means "local, value unknown". */
+    /**
+     * A lexical scope; a {@code null} shape means "local, value unknown".
+     */
     private static final class Scope {
         final @Nullable Scope parent;
         final Map<String, VariableShape> vars = new HashMap<>();
@@ -143,9 +140,13 @@ public final class TemplateAnalyzer {
         final List<String> templates;
         final Set<String> importedLibraries;
 
-        /** Template-namespace variables created by {@code #assign}/{@code #global}. */
+        /**
+         * Template-namespace variables created by {@code #assign}/{@code #global}.
+         */
         final Scope globals = new Scope(null);
-        /** Names assigned anywhere at namespace level; known before the walk reaches the assignment. */
+        /**
+         * Names assigned anywhere at namespace level; known before the walk reaches the assignment.
+         */
         final Set<String> assignedSomewhere = new HashSet<>();
         final Set<String> macroNames = new HashSet<>();
         final Set<String> namespaces = new HashSet<>();
@@ -155,7 +156,9 @@ public final class TemplateAnalyzer {
         Scope scope = globals;
         int macroDepth;
 
-        /** @param parent the importing template's walker; an imported library gets its own namespace */
+        /**
+         * @param parent the importing template's walker; an imported library gets its own namespace
+         */
         Walker(PreviewConfiguration configuration, @Nullable Walker parent) {
             this.configuration = configuration;
             roots = parent == null ? new LinkedHashMap<>() : parent.roots;
@@ -163,6 +166,58 @@ public final class TemplateAnalyzer {
             warnings = parent == null ? new LinkedHashSet<>() : parent.warnings;
             templates = parent == null ? new ArrayList<>() : parent.templates;
             importedLibraries = parent == null ? new HashSet<>() : parent.importedLibraries;
+        }
+
+        private static void hintIfShape(@Nullable VariableShape shape, Hint hint) {
+            if (shape != null) {
+                shape.hint(hint);
+            }
+        }
+
+        /**
+         * Built-in nodes have symbols like {@code ?upper_case}; note that {@code ??} is the existence operator.
+         */
+        private static boolean isBuiltIn(Object node) {
+            String symbol = FtlAstAccess.nodeType(node);
+            return symbol.length() > 1 && symbol.charAt(0) == '?' && Character.isLetter(symbol.charAt(1));
+        }
+
+        // ---------------------------------------------------------------------------------------------- elements
+
+        private static List<Object> argumentValues(Object node) {
+            List<Object> values = new ArrayList<>();
+            for (Param p : FtlAstAccess.params(node)) {
+                if (p.role().equals("argument value")) {
+                    values.add(p.value());
+                }
+            }
+            return values;
+        }
+
+        private static @Nullable Object param(@Nullable Object node, String role) {
+            if (node == null || !FtlAstAccess.isNode(node)) {
+                return null;
+            }
+            for (Param p : FtlAstAccess.params(node)) {
+                if (p.role().equals(role)) {
+                    return p.value();
+                }
+            }
+            return null;
+        }
+
+        private static @Nullable String stringParam(Object node, String role) {
+            return param(node, role) instanceof String s ? s : null;
+        }
+
+        private static List<String> stringParams(Object node, String role) {
+            List<String> values = new ArrayList<>();
+            for (Param p : FtlAstAccess.params(node)) {
+                if (p.role().equals(role) && p.value() instanceof String s) {
+                    values.add(s);
+                }
+            }
+            return values;
         }
 
         void walkTemplate(Template template, String name) {
@@ -183,7 +238,9 @@ public final class TemplateAnalyzer {
             });
         }
 
-        /** Collects macro names and namespace-level assignment targets, which are visible before their definition. */
+        /**
+         * Collects macro names and namespace-level assignment targets, which are visible before their definition.
+         */
         private void prepass(Object element, boolean insideMacro) {
             String type = FtlAstAccess.nodeType(element);
             boolean macro = type.equals("#macro") || type.equals("#function");
@@ -210,8 +267,6 @@ public final class TemplateAnalyzer {
                 prepass(child, insideMacro || macro);
             }
         }
-
-        // ---------------------------------------------------------------------------------------------- elements
 
         void element(Object el) {
             String type = FtlAstAccess.nodeType(el);
@@ -343,6 +398,8 @@ public final class TemplateAnalyzer {
                 scope = saved;
             }
         }
+
+        // ------------------------------------------------------------------------------------------- expressions
 
         private void assignment(Object el, String type) {
             String target = stringParam(el, "assignment target");
@@ -486,8 +543,6 @@ public final class TemplateAnalyzer {
             }
             children(el);
         }
-
-        // ------------------------------------------------------------------------------------------- expressions
 
         /**
          * Resolves an expression symbolically (nothing is executed). Returns the shape of the data-model value the expression denotes, or
@@ -655,6 +710,8 @@ public final class TemplateAnalyzer {
             return method == null ? null : method.methodResult();
         }
 
+        // ------------------------------------------------------------------------------------------------ helpers
+
         private @Nullable VariableShape builtIn(Object expression, List<Object> arguments) {
             Object nameParam = param(expression, "right-hand operand");
             String name = nameParam instanceof String s ? s : FtlAstAccess.nodeType(expression).substring(1);
@@ -715,7 +772,9 @@ public final class TemplateAnalyzer {
             return null;
         }
 
-        /** {@code ?string("yes", "no")} formats a boolean; {@code ?string("dd.MM.yyyy")} a date; {@code "0.00"} a number. */
+        /**
+         * {@code ?string("yes", "no")} formats a boolean; {@code ?string("dd.MM.yyyy")} a date; {@code "0.00"} a number.
+         */
         private void stringBuiltInHint(VariableShape target, List<Object> arguments) {
             if (arguments.size() == 2) {
                 target.hint(Hint.BOOLEAN);
@@ -751,7 +810,9 @@ public final class TemplateAnalyzer {
             }
         }
 
-        /** Infers the type of {@code shape} from a literal it is compared, concatenated or defaulted with. */
+        /**
+         * Infers the type of {@code shape} from a literal it is compared, concatenated or defaulted with.
+         */
         private void literalHint(VariableShape shape, Object literal) {
             if (FtlAstAccess.isStringLiteral(literal)) {
                 shape.hint(Hint.STRING);
@@ -773,7 +834,9 @@ public final class TemplateAnalyzer {
             }
         }
 
-        /** {@code x!"N/A"}: a weak hint, because the fallback is often unrelated to the real value's type. */
+        /**
+         * {@code x!"N/A"}: a weak hint, because the fallback is often unrelated to the real value's type.
+         */
         private void defaultHint(VariableShape shape, Object literal) {
             if (FtlAstAccess.isStringLiteral(literal)) {
                 shape.hint(Hint.DEFAULT_STRING);
@@ -786,8 +849,6 @@ public final class TemplateAnalyzer {
             }
         }
 
-        // ------------------------------------------------------------------------------------------------ helpers
-
         private void withScope(Runnable body) {
             Scope saved = scope;
             scope = new Scope(saved);
@@ -796,54 +857,6 @@ public final class TemplateAnalyzer {
             } finally {
                 scope = saved;
             }
-        }
-
-        private static void hintIfShape(@Nullable VariableShape shape, Hint hint) {
-            if (shape != null) {
-                shape.hint(hint);
-            }
-        }
-
-        /** Built-in nodes have symbols like {@code ?upper_case}; note that {@code ??} is the existence operator. */
-        private static boolean isBuiltIn(Object node) {
-            String symbol = FtlAstAccess.nodeType(node);
-            return symbol.length() > 1 && symbol.charAt(0) == '?' && Character.isLetter(symbol.charAt(1));
-        }
-
-        private static List<Object> argumentValues(Object node) {
-            List<Object> values = new ArrayList<>();
-            for (Param p : FtlAstAccess.params(node)) {
-                if (p.role().equals("argument value")) {
-                    values.add(p.value());
-                }
-            }
-            return values;
-        }
-
-        private static @Nullable Object param(@Nullable Object node, String role) {
-            if (node == null || !FtlAstAccess.isNode(node)) {
-                return null;
-            }
-            for (Param p : FtlAstAccess.params(node)) {
-                if (p.role().equals(role)) {
-                    return p.value();
-                }
-            }
-            return null;
-        }
-
-        private static @Nullable String stringParam(Object node, String role) {
-            return param(node, role) instanceof String s ? s : null;
-        }
-
-        private static List<String> stringParams(Object node, String role) {
-            List<String> values = new ArrayList<>();
-            for (Param p : FtlAstAccess.params(node)) {
-                if (p.role().equals(role) && p.value() instanceof String s) {
-                    values.add(s);
-                }
-            }
-            return values;
         }
     }
 }

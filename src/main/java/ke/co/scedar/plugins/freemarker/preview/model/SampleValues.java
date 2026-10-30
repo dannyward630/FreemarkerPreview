@@ -16,8 +16,6 @@ import java.util.Set;
  */
 public final class SampleValues {
 
-    public enum Kind { STRING, NUMBER, BOOLEAN, DATE, DATETIME, TIME }
-
     private static final List<String> PEOPLE = List.of("Jane Doe", "John Smith", "Amina Otieno", "Luis García");
     private static final List<String> FIRST_NAMES = List.of("Jane", "John", "Amina", "Luis");
     private static final List<String> LAST_NAMES = List.of("Doe", "Smith", "Otieno", "García");
@@ -50,7 +48,6 @@ public final class SampleValues {
     private static final Set<String> ORGANIZATION_WORDS = Set.of("client", "config", "organization", "organisation",
             "org", "company", "tenant", "business", "shop", "store", "employer", "vendor", "supplier", "brand", "site",
             "merchant", "partner");
-
     private static final Set<String> MONEY = Set.of("total", "amount", "price", "cost", "subtotal", "balance",
             "salary", "revenue", "fee", "tax", "discount", "sum", "payment", "income", "budget", "value", "due",
             "fees", "costs", "amounts", "payments", "charges", "outstanding", "collected", "paid", "overpayment",
@@ -69,11 +66,12 @@ public final class SampleValues {
             "premium", "required", "featured", "online", "subscribed", "confirmed");
     private static final Set<String> IMAGE_WORDS = Set.of("image", "img", "avatar", "photo", "picture", "logo",
             "thumbnail", "icon", "banner");
-
     private SampleValues() {
     }
 
-    /** Guesses the kind of a value from its name alone (used when the template gives no type hint). */
+    /**
+     * Guesses the kind of a value from its name alone (used when the template gives no type hint).
+     */
     public static Kind guessKind(String name) {
         List<String> words = Names.words(name);
         if (words.isEmpty()) {
@@ -254,7 +252,9 @@ public final class SampleValues {
         };
     }
 
-    /** Ratios such as a collection rate compared with {@code 0.9}. */
+    /**
+     * Ratios such as a collection rate compared with {@code 0.9}.
+     */
     public static java.math.BigDecimal fraction(int index) {
         return new java.math.BigDecimal(pick(FRACTIONS, index));
     }
@@ -271,7 +271,9 @@ public final class SampleValues {
         return LocalTime.of(9, 30).plusMinutes(index * 45L).toString() + ":00";
     }
 
-    /** A self-contained SVG placeholder, so previews show an image without loading anything from the network. */
+    /**
+     * A self-contained SVG placeholder, so previews show an image without loading anything from the network.
+     */
     static String placeholderImage(String label) {
         String safe = label.replaceAll("[^A-Za-z0-9 ]", "");
         String svg = "<svg xmlns='http://www.w3.org/2000/svg' width='160' height='100'>"
@@ -284,4 +286,6 @@ public final class SampleValues {
     private static <T> T pick(List<T> values, int index) {
         return values.get(Math.floorMod(index, values.size()));
     }
+
+    public enum Kind {STRING, NUMBER, BOOLEAN, DATE, DATETIME, TIME}
 }

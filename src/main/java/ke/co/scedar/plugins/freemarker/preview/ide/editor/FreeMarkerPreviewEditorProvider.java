@@ -10,7 +10,9 @@ import ke.co.scedar.plugins.freemarker.preview.ide.FreeMarkerFiles;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.FreeMarkerPreviewFileEditor;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates the preview half; not registered on its own, only used by {@link FreeMarkerSplitEditorProvider}. */
+/**
+ * Creates the preview half; not registered on its own, only used by {@link FreeMarkerSplitEditorProvider}.
+ */
 final class FreeMarkerPreviewEditorProvider implements FileEditorProvider, DumbAware {
 
     @Override

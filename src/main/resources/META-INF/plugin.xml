@@ -18,6 +18,19 @@
     </ul>
     ]]></description>
 
+    <change-notes><![CDATA[
+    <h3>0.1.1</h3>
+    <ul>
+        <li>Fixed: only the first preview page ever appeared. Opening another template stayed on "Preparing preview…",
+            and Refresh Preview and template edits did not update the page, although the status line said it was
+            rendered.</li>
+    </ul>
+    <h3>0.1.0</h3>
+    <ul>
+        <li>Initial release.</li>
+    </ul>
+    ]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.jcef</depends>
     <depends optional="true" config-file="freemarker-preview-java.xml">com.intellij.java</depends>
@@ -29,7 +42,8 @@
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileEditorProvider implementation="ke.co.scedar.plugins.freemarker.preview.ide.editor.FreeMarkerSplitEditorProvider"/>
+        <fileEditorProvider
+                implementation="ke.co.scedar.plugins.freemarker.preview.ide.editor.FreeMarkerSplitEditorProvider"/>
     </extensions>
 
     <actions>
