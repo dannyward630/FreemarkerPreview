@@ -17,25 +17,6 @@ public final class Json {
 
     private static final int MAX_DEPTH = 64;
 
-    public static final class ParseException extends Exception {
-        private final int line;
-        private final int column;
-
-        ParseException(String message, int line, int column) {
-            super(message + " (line " + line + ", column " + column + ")");
-            this.line = line;
-            this.column = column;
-        }
-
-        public int line() {
-            return line;
-        }
-
-        public int column() {
-            return column;
-        }
-    }
-
     private Json() {
     }
 
@@ -50,7 +31,9 @@ public final class Json {
         return value;
     }
 
-    /** Parses a JSON object (the sample data model must be one). */
+    /**
+     * Parses a JSON object (the sample data model must be one).
+     */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> parseObject(String text) throws ParseException {
         Object value = parse(text);
@@ -135,6 +118,25 @@ public final class Json {
             }
         }
         out.append('"');
+    }
+
+    public static final class ParseException extends Exception {
+        private final int line;
+        private final int column;
+
+        ParseException(String message, int line, int column) {
+            super(message + " (line " + line + ", column " + column + ")");
+            this.line = line;
+            this.column = column;
+        }
+
+        public int line() {
+            return line;
+        }
+
+        public int column() {
+            return column;
+        }
     }
 
     private static final class Reader {

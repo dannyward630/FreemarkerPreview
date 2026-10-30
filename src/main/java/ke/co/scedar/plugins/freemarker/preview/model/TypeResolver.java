@@ -3,7 +3,9 @@ package ke.co.scedar.plugins.freemarker.preview.model;
 import ke.co.scedar.plugins.freemarker.preview.analysis.VariableShape;
 import org.jetbrains.annotations.Nullable;
 
-/** Resolves the type of a root data-model variable from project information. */
+/**
+ * Resolves the type of a root data-model variable from project information.
+ */
 @FunctionalInterface
 public interface TypeResolver {
 
@@ -16,7 +18,9 @@ public interface TypeResolver {
      */
     @Nullable Resolution resolve(String name, VariableShape shape);
 
-    /** @param origin short explanation shown to the user, e.g. {@code "@ftlvariable"} or {@code "project class"} */
+    /**
+     * @param origin short explanation shown to the user, e.g. {@code "@ftlvariable"} or {@code "project class"}
+     */
     record Resolution(TypeInfo type, String origin) {
     }
 }

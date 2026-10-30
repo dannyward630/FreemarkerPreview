@@ -15,9 +15,9 @@ public interface TypeResolverProvider {
     ExtensionPointName<TypeResolverProvider> EP_NAME =
             ExtensionPointName.create("ke.co.scedar.plugins.freemarker-preview.typeResolverProvider");
 
-    @Nullable TypeResolver create(Project project, VirtualFile template);
-
-    /** The first resolver offered by an installed provider, or {@link TypeResolver#NONE}. */
+    /**
+     * The first resolver offered by an installed provider, or {@link TypeResolver#NONE}.
+     */
     static TypeResolver forFile(Project project, VirtualFile template) {
         for (TypeResolverProvider provider : EP_NAME.getExtensionList()) {
             TypeResolver resolver = provider.create(project, template);
@@ -27,4 +27,6 @@ public interface TypeResolverProvider {
         }
         return TypeResolver.NONE;
     }
+
+    @Nullable TypeResolver create(Project project, VirtualFile template);
 }

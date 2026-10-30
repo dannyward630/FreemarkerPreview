@@ -16,9 +16,8 @@ import java.util.List;
 public record RenderDiagnostic(Kind kind, String title, String message, @Nullable String templateName, int line,
                                int column, @Nullable String ftlStack, List<SourceLine> excerpt, @Nullable String hint) {
 
-    public enum Kind { TEMPLATE_SYNTAX, RENDERING, MISSING_TEMPLATE, SAMPLE_DATA, TIMEOUT, OUTPUT_TOO_LARGE, CANCELLED, INTERNAL }
-
-    public record SourceLine(int number, String text, boolean highlighted) {
+    public static RenderDiagnostic simple(Kind kind, String title, String message, @Nullable String hint) {
+        return new RenderDiagnostic(kind, title, message, null, 0, 0, null, List.of(), hint);
     }
 
     public String location() {
@@ -35,7 +34,8 @@ public record RenderDiagnostic(Kind kind, String title, String message, @Nullabl
         return sb.toString();
     }
 
-    public static RenderDiagnostic simple(Kind kind, String title, String message, @Nullable String hint) {
-        return new RenderDiagnostic(kind, title, message, null, 0, 0, null, List.of(), hint);
+    public enum Kind {TEMPLATE_SYNTAX, RENDERING, MISSING_TEMPLATE, SAMPLE_DATA, TIMEOUT, OUTPUT_TOO_LARGE, CANCELLED, INTERNAL}
+
+    public record SourceLine(int number, String text, boolean highlighted) {
     }
 }

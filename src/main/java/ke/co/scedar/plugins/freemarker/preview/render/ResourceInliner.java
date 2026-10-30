@@ -14,15 +14,6 @@ import java.util.regex.Pattern;
  */
 public final class ResourceInliner {
 
-    /** Resolves a local reference from the rendered page. */
-    public interface Resolver {
-        /** @return a {@code data:} URI for the image, or {@code null} to leave the reference unchanged */
-        @Nullable String imageDataUri(String path);
-
-        /** @return the stylesheet text, or {@code null} to leave the reference unchanged */
-        @Nullable String stylesheet(String path);
-    }
-
     private static final Pattern IMG = Pattern.compile(
             "(<img\\b[^>]*?\\bsrc\\s*=\\s*)([\"'])(.*?)\\2", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern LINK = Pattern.compile("<link\\b[^>]*>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -30,7 +21,6 @@ public final class ResourceInliner {
     private static final Pattern STYLESHEET_REL = Pattern.compile("\\brel\\s*=\\s*([\"'])?\\s*stylesheet",
             Pattern.CASE_INSENSITIVE);
     private static final int MAX_REFERENCES = 200;
-
     private ResourceInliner() {
     }
 
@@ -39,7 +29,9 @@ public final class ResourceInliner {
         return replaceStylesheets(withImages, resolver);
     }
 
-    /** Whether a reference points at a local file rather than the network or inline data. */
+    /**
+     * Whether a reference points at a local file rather than the network or inline data.
+     */
     public static boolean isLocal(String reference) {
         String r = reference.trim().toLowerCase(Locale.ROOT);
         return !r.isEmpty() && !r.startsWith("http:") && !r.startsWith("https:") && !r.startsWith("//")
@@ -47,7 +39,9 @@ public final class ResourceInliner {
                 && !r.startsWith("mailto:") && !r.startsWith("about:") && !r.startsWith("blob:");
     }
 
-    /** Strips query strings, fragments and HTML entity escaping that the template engine may have added. */
+    /**
+     * Strips query strings, fragments and HTML entity escaping that the template engine may have added.
+     */
     static String cleanPath(String reference) {
         String path = reference.trim().replace("&amp;", "&").replace("&#39;", "'").replace("&quot;", "\"");
         int cut = path.indexOf('?');
@@ -99,5 +93,20 @@ public final class ResourceInliner {
         }
         m.appendTail(out);
         return out.toString();
+    }
+
+    /**
+     * Resolves a local reference from the rendered page.
+     */
+    public interface Resolver {
+        /**
+         * @return a {@code data:} URI for the image, or {@code null} to leave the reference unchanged
+         */
+        @Nullable String imageDataUri(String path);
+
+        /**
+         * @return the stylesheet text, or {@code null} to leave the reference unchanged
+         */
+        @Nullable String stylesheet(String path);
     }
 }

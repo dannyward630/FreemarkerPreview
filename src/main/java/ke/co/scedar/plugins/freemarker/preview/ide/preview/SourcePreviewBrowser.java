@@ -5,9 +5,8 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Used when JCEF is unavailable (e.g. some remote-development setups or headless tests). Shows the generated page as

@@ -17,14 +17,18 @@ public interface TemplateSource {
 
     TemplateSource NONE = name -> null;
 
-    /** Returns the template text, or {@code null} when the template does not exist or may not be read. */
-    @Nullable String read(@NotNull String name) throws IOException;
-
     static TemplateSource of(Map<String, String> templates) {
         return templates::get;
     }
 
-    /** A source that serves {@code text} for {@code name} (e.g. the unsaved editor content) and delegates otherwise. */
+    /**
+     * Returns the template text, or {@code null} when the template does not exist or may not be read.
+     */
+    @Nullable String read(@NotNull String name) throws IOException;
+
+    /**
+     * A source that serves {@code text} for {@code name} (e.g. the unsaved editor content) and delegates otherwise.
+     */
     default TemplateSource overlay(String name, String text) {
         TemplateSource delegate = this;
         return n -> n.equals(name) ? text : delegate.read(n);

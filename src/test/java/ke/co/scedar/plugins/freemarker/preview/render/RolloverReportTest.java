@@ -16,10 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * A real-world report: the main template lives in {@code reports/} and imports layout/header/footer fragments from a
@@ -37,6 +34,15 @@ public class RolloverReportTest {
     private AnalysisResult analysis;
     private Map<String, Object> model;
 
+    @SuppressWarnings("unchecked")
+    private static <T> T at(Object value, Object... path) {
+        Object current = value;
+        for (Object step : path) {
+            current = step instanceof Integer i ? ((List<Object>) current).get(i) : ((Map<String, Object>) current).get(step);
+        }
+        return (T) current;
+    }
+
     @Before
     public void setUp() throws IOException {
         Map<String, String> files = new HashMap<>();
@@ -50,15 +56,6 @@ public class RolloverReportTest {
         analysis = new TemplateAnalyzer().analyze(REPORT, report, source);
         assertNull(String.valueOf(analysis.parseError()), analysis.parseError());
         model = new SampleModelGenerator().generate(analysis, TypeResolver.NONE).model();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T at(Object value, Object... path) {
-        Object current = value;
-        for (Object step : path) {
-            current = step instanceof Integer i ? ((List<Object>) current).get(i) : ((Map<String, Object>) current).get(step);
-        }
-        return (T) current;
     }
 
     @Test

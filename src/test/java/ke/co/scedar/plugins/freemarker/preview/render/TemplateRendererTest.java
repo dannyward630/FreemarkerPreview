@@ -13,10 +13,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TemplateRendererTest {
 
@@ -116,8 +113,8 @@ public class TemplateRendererTest {
     public void numbersAnswerBigDecimalMethods() throws Exception {
         assertEquals("0.2500|1|75.00|0.25|2.50|N",
                 renderOk("${a.divide(b, 4, \"roundHalfUp\")?string[\"0.0000\"]}|${a.compareTo(0)}"
-                        + "|${b.subtract(a)?string[\"0.00\"]}|${a.divide(b, 4, \"HALF_UP\").doubleValue()?c}"
-                        + "|${a.multiply(0.1)?string(\"0.00\")}|${(a.compareTo(b) gt 0)?then(\"Y\", \"N\")}",
+                                + "|${b.subtract(a)?string[\"0.00\"]}|${a.divide(b, 4, \"HALF_UP\").doubleValue()?c}"
+                                + "|${a.multiply(0.1)?string(\"0.00\")}|${(a.compareTo(b) gt 0)?then(\"Y\", \"N\")}",
                         "{\"a\": 25, \"b\": 100}"));
         RenderDiagnostic d = renderFail("a.ftl", "${a.divide(0)}", "{\"a\": 1}", TemplateSource.NONE);
         assertTrue(d.message(), d.message().contains("divide"));

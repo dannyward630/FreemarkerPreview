@@ -3,11 +3,7 @@ package ke.co.scedar.plugins.freemarker.preview.engine;
 import freemarker.cache.TemplateNameFormat;
 import freemarker.core.FtlAstAccess;
 import freemarker.core.TemplateClassResolver;
-import freemarker.template.Configuration;
-import freemarker.template.SimpleObjectWrapper;
-import freemarker.template.Template;
-import freemarker.template.TemplateExceptionHandler;
-import freemarker.template.Version;
+import freemarker.template.*;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -57,7 +53,9 @@ public final class PreviewConfiguration extends Configuration {
         setFallbackOnNullLoopVariable(false);
     }
 
-    /** Templates that were not found at their exact path and were loaded from an ancestor directory instead. */
+    /**
+     * Templates that were not found at their exact path and were loaded from an ancestor directory instead.
+     */
     public java.util.Map<String, String> templateFallbacks() {
         return loader.fallbacks();
     }

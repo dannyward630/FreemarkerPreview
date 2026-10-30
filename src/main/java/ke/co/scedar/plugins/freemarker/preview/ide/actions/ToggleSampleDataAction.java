@@ -2,12 +2,14 @@ package ke.co.scedar.plugins.freemarker.preview.ide.actions;
 
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.actionSystem.ToggleAction;
+import com.intellij.openapi.project.DumbAware;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.PreviewController;
 import org.jetbrains.annotations.NotNull;
 
-/** Shows or hides the sample-data editor below the preview. */
+/**
+ * Shows or hides the sample-data editor below the preview.
+ */
 public final class ToggleSampleDataAction extends ToggleAction implements DumbAware {
 
     @Override

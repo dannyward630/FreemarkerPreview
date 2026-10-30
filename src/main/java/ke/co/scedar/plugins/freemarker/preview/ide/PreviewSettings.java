@@ -7,15 +7,12 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import org.jetbrains.annotations.NotNull;
 
-/** IDE-wide preview settings. */
+/**
+ * IDE-wide preview settings.
+ */
 @Service(Service.Level.APP)
 @State(name = "FreeMarkerPreviewSettings", storages = @Storage("freemarkerPreview.xml"))
 public final class PreviewSettings implements PersistentStateComponent<PreviewSettings.SettingsState> {
-
-    public static final class SettingsState {
-        /** Load images, stylesheets and fonts referenced by http(s) URLs (e.g. logos, CDN icon fonts). */
-        public boolean loadRemoteResources = true;
-    }
 
     private volatile SettingsState state = new SettingsState();
 
@@ -39,5 +36,12 @@ public final class PreviewSettings implements PersistentStateComponent<PreviewSe
     @Override
     public void loadState(@NotNull SettingsState loaded) {
         state = loaded;
+    }
+
+    public static final class SettingsState {
+        /**
+         * Load images, stylesheets and fonts referenced by http(s) URLs (e.g. logos, CDN icon fonts).
+         */
+        public boolean loadRemoteResources = true;
     }
 }

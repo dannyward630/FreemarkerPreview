@@ -41,7 +41,9 @@ public final class VfsTemplateSource implements TemplateSource {
         });
     }
 
-    /** URLs of the files read so far, used to refresh the preview when an included template changes. */
+    /**
+     * URLs of the files read so far, used to refresh the preview when an included template changes.
+     */
     public Set<String> readUrls() {
         return Set.copyOf(readUrls);
     }

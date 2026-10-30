@@ -8,13 +8,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class JsonAndMergeTest {
+
+    private static Map<String, Object> map(Object... keyValues) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        List<Object> list = Arrays.asList(keyValues);
+        for (int i = 0; i < list.size(); i += 2) {
+            map.put((String) list.get(i), list.get(i + 1));
+        }
+        return map;
+    }
 
     @Test
     public void roundTripsValues() throws Exception {
@@ -76,14 +81,5 @@ public class JsonAndMergeTest {
         assertTrue(merged.containsKey("removed"));
         assertNull(merged.get("removed"));
         assertFalse("inputs are not mutated", ((Map<?, ?>) generated.get("customer")).get("name").equals("Ada"));
-    }
-
-    private static Map<String, Object> map(Object... keyValues) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        List<Object> list = Arrays.asList(keyValues);
-        for (int i = 0; i < list.size(); i += 2) {
-            map.put((String) list.get(i), list.get(i + 1));
-        }
-        return map;
     }
 }

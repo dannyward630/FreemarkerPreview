@@ -18,21 +18,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import ke.co.scedar.plugins.freemarker.preview.analysis.AnalysisResult;
 import ke.co.scedar.plugins.freemarker.preview.analysis.TemplateAnalyzer;
-import ke.co.scedar.plugins.freemarker.preview.ide.SampleDataService;
-import ke.co.scedar.plugins.freemarker.preview.ide.ProjectResourceResolver;
-import ke.co.scedar.plugins.freemarker.preview.ide.TemplateRoot;
-import ke.co.scedar.plugins.freemarker.preview.ide.TypeResolverProvider;
-import ke.co.scedar.plugins.freemarker.preview.ide.VfsTemplateSource;
+import ke.co.scedar.plugins.freemarker.preview.ide.*;
 import ke.co.scedar.plugins.freemarker.preview.model.Json;
 import ke.co.scedar.plugins.freemarker.preview.model.ModelMerger;
 import ke.co.scedar.plugins.freemarker.preview.model.SampleModelGenerator;
 import ke.co.scedar.plugins.freemarker.preview.model.SampleModelGenerator.GeneratedModel;
 import ke.co.scedar.plugins.freemarker.preview.model.TypeResolver;
-import ke.co.scedar.plugins.freemarker.preview.render.RenderDiagnostic;
-import ke.co.scedar.plugins.freemarker.preview.render.RenderRequest;
-import ke.co.scedar.plugins.freemarker.preview.render.RenderResult;
-import ke.co.scedar.plugins.freemarker.preview.render.ResourceInliner;
-import ke.co.scedar.plugins.freemarker.preview.render.TemplateRenderer;
+import ke.co.scedar.plugins.freemarker.preview.render.*;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
@@ -40,11 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -58,41 +46,42 @@ import java.util.function.Consumer;
  */
 public final class PreviewController implements Disposable {
 
+    static final int TEMPLATE_DEBOUNCE_MS = 300;
+    static final int SAMPLE_DATA_DEBOUNCE_MS = 400;
+    static final int SLOW_RUN_NOTICE_SECONDS = 8;
     private static final Logger LOG = Logger.getInstance(PreviewController.class);
     private static final ExecutorService EXECUTOR =
             AppExecutorUtil.createBoundedApplicationPoolExecutor("FreeMarker Preview", 2);
-    static final int TEMPLATE_DEBOUNCE_MS = 300;
-    static final int SAMPLE_DATA_DEBOUNCE_MS = 400;
-    /** Text of the analyzer note emitted when a template was loaded through the ancestor-folder fallback. */
+    /**
+     * Text of the analyzer note emitted when a template was loaded through the ancestor-folder fallback.
+     */
     private static final String PATH_FALLBACK_MARKER = "does not exist; the preview loaded";
-
     private final Project project;
     private final VirtualFile file;
     private final Document document;
     private final PreviewPanel view;
     private final SampleDataPanel sampleDataPanel;
-
     private final TemplateAnalyzer analyzer = new TemplateAnalyzer();
     private final SampleModelGenerator generator = new SampleModelGenerator();
     private final TemplateRenderer renderer = new TemplateRenderer(AppExecutorUtil.getAppScheduledExecutorService());
-
     private final Object lock = new Object();
     private final AtomicLong generation = new AtomicLong();
+    private final List<Consumer<RenderResult>> resultListeners = new CopyOnWriteArrayList<>();
     private @Nullable ScheduledFuture<?> pending;
     private @Nullable Future<?> running;
     private volatile boolean disposed;
-
-    /** Sample data state; written on the EDT, read by background runs. */
+    /**
+     * Sample data state; written on the EDT, read by background runs.
+     */
     private volatile boolean customData;
     private volatile @Nullable String customText;
     private volatile @Nullable GeneratedModel lastGenerated;
     private volatile Set<String> dependencyUrls = Set.of();
-    /** What the latest run is doing, shown if it takes unusually long. */
+    /**
+     * What the latest run is doing, shown if it takes unusually long.
+     */
     private volatile String stage = "waiting to start";
     private volatile long shownRun;
-    static final int SLOW_RUN_NOTICE_SECONDS = 8;
-
-    private final List<Consumer<RenderResult>> resultListeners = new CopyOnWriteArrayList<>();
 
     PreviewController(Project project, VirtualFile file, Document document, PreviewPanel view, SampleDataPanel sampleData) {
         this.project = project;
@@ -132,7 +121,9 @@ public final class PreviewController implements Disposable {
 
     // ------------------------------------------------------------------------------------------- user operations
 
-    /** Called on the EDT when the user edits the sample data. */
+    /**
+     * Called on the EDT when the user edits the sample data.
+     */
     void onSampleDataEdited(String text) {
         customData = true;
         customText = text;
@@ -141,7 +132,9 @@ public final class PreviewController implements Disposable {
         schedule(SAMPLE_DATA_DEBOUNCE_MS);
     }
 
-    /** Discards custom sample data and regenerates it from the template. */
+    /**
+     * Discards custom sample data and regenerates it from the template.
+     */
     public void regenerateSampleData() {
         customData = false;
         customText = null;
@@ -200,7 +193,9 @@ public final class PreviewController implements Disposable {
         }
     }
 
-    /** Replaces the "Preparing" page with what the run is waiting for, so a slow preview is never a silent one. */
+    /**
+     * Replaces the "Preparing" page with what the run is waiting for, so a slow preview is never a silent one.
+     */
     private void noticeSlowRun(long run) {
         if (isStale(run) || shownRun >= run) {
             return;
@@ -221,9 +216,6 @@ public final class PreviewController implements Disposable {
     }
 
     // -------------------------------------------------------------------------------------------------- pipeline
-
-    private record Snapshot(String text, @Nullable TemplateRoot root) {
-    }
 
     private void runPipeline(long run) {
         long started = System.nanoTime();
@@ -331,14 +323,18 @@ public final class PreviewController implements Disposable {
         }
     }
 
-    /** Embeds images and stylesheets the page references from the project (the preview itself cannot read files). */
+    /**
+     * Embeds images and stylesheets the page references from the project (the preview itself cannot read files).
+     */
     private RenderResult.Success inlineProjectResources(RenderResult.Success success, TemplateRoot root) {
         String html = ReadAction.computeBlocking(() -> project.isDisposed() || !file.isValid() ? success.output()
                 : ResourceInliner.inline(success.output(), new ProjectResourceResolver(project, file, root.directory())));
         return html.equals(success.output()) ? success : new RenderResult.Success(html, success.kind(), success.millis());
     }
 
-    /** Generates sample data, using project types when a resolver is available and indexes are ready. */
+    /**
+     * Generates sample data, using project types when a resolver is available and indexes are ready.
+     */
     private GeneratedModel generate(AnalysisResult analysis) {
         TypeResolver resolver = TypeResolverProvider.forFile(project, file);
         if (resolver == TypeResolver.NONE || DumbService.getInstance(project).isDumb()) {
@@ -397,5 +393,8 @@ public final class PreviewController implements Disposable {
                 running.cancel(true);
             }
         }
+    }
+
+    private record Snapshot(String text, @Nullable TemplateRoot root) {
     }
 }

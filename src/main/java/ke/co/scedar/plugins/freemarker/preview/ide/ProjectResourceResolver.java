@@ -12,13 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Finds images and stylesheets referenced by the rendered page inside the project, the way a web application would
@@ -48,6 +42,19 @@ public final class ProjectResourceResolver implements ResourceInliner.Resolver {
         this.project = project;
         this.template = template;
         this.bases = bases(templateRoot);
+    }
+
+    /**
+     * Rejects symbolic links that lead out of the project.
+     */
+    private static boolean insideProject(VirtualFile file, ProjectFileIndex index) {
+        VirtualFile canonical = file.getCanonicalFile();
+        return canonical != null && index.isInContent(canonical);
+    }
+
+    private static String extension(VirtualFile file) {
+        String extension = file.getExtension();
+        return extension == null ? "" : extension.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -100,12 +107,6 @@ public final class ProjectResourceResolver implements ResourceInliner.Resolver {
         return null;
     }
 
-    /** Rejects symbolic links that lead out of the project. */
-    private static boolean insideProject(VirtualFile file, ProjectFileIndex index) {
-        VirtualFile canonical = file.getCanonicalFile();
-        return canonical != null && index.isInContent(canonical);
-    }
-
     private List<VirtualFile> bases(VirtualFile templateRoot) {
         Set<VirtualFile> result = new LinkedHashSet<>();
         result.add(templateRoot);
@@ -126,10 +127,5 @@ public final class ProjectResourceResolver implements ResourceInliner.Resolver {
             }
         }
         return List.copyOf(result);
-    }
-
-    private static String extension(VirtualFile file) {
-        String extension = file.getExtension();
-        return extension == null ? "" : extension.toLowerCase(Locale.ROOT);
     }
 }

@@ -6,7 +6,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Locale;
 import java.util.Set;
 
-/** Recognizes FreeMarker templates by extension, independent of which plugin (if any) registers a file type for them. */
+/**
+ * Recognizes FreeMarker templates by extension, independent of which plugin (if any) registers a file type for them.
+ */
 public final class FreeMarkerFiles {
 
     public static final Set<String> EXTENSIONS = Set.of("ftl", "ftlh", "ftlx");

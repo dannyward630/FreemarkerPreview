@@ -21,7 +21,9 @@ public record TemplateRoot(VirtualFile directory, String templateName) {
 
     private static final String TEMPLATES_DIRECTORY = "templates";
 
-    /** Must be called inside a read action. */
+    /**
+     * Must be called inside a read action.
+     */
     public static @Nullable TemplateRoot locate(Project project, VirtualFile file) {
         VirtualFile parent = file.getParent();
         if (parent == null || !file.isValid()) {

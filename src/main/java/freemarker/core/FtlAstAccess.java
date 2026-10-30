@@ -22,11 +22,9 @@ public final class FtlAstAccess {
     private FtlAstAccess() {
     }
 
-    /** One parameter of an AST node: its FreeMarker role name (e.g. {@code "left-hand operand"}) and value. */
-    public record Param(String role, Object value) {
-    }
-
-    /** The root element of a parsed template. */
+    /**
+     * The root element of a parsed template.
+     */
     public static Object root(Template template) {
         return template.getRootTreeNode();
     }
@@ -43,12 +41,16 @@ public final class FtlAstAccess {
         return o instanceof TemplateElement;
     }
 
-    /** FreeMarker's node type symbol, e.g. {@code "#list"}, {@code "."}, {@code "?upper_case"}, {@code "${...}"}. */
+    /**
+     * FreeMarker's node type symbol, e.g. {@code "#list"}, {@code "."}, {@code "?upper_case"}, {@code "${...}"}.
+     */
     public static String nodeType(Object node) {
         return ((TemplateObject) node).getNodeTypeSymbol();
     }
 
-    /** The AST node class name, e.g. {@code "Identifier"}, {@code "Dot"}, {@code "MethodCall"}. */
+    /**
+     * The AST node class name, e.g. {@code "Identifier"}, {@code "Dot"}, {@code "MethodCall"}.
+     */
     public static String kind(Object node) {
         return node.getClass().getSimpleName();
     }
@@ -81,7 +83,9 @@ public final class FtlAstAccess {
         return result;
     }
 
-    /** Whether a string literal contains no interpolations, i.e. its value is known at parse time. */
+    /**
+     * Whether a string literal contains no interpolations, i.e. its value is known at parse time.
+     */
     public static boolean isStaticStringLiteral(Object node) {
         return node instanceof StringLiteral
                 && params(node).stream().noneMatch(p -> p.value() instanceof TemplateObject);
@@ -91,7 +95,9 @@ public final class FtlAstAccess {
         return node instanceof StringLiteral;
     }
 
-    /** The value of a static string literal (see {@link #isStaticStringLiteral(Object)}). */
+    /**
+     * The value of a static string literal (see {@link #isStaticStringLiteral(Object)}).
+     */
     public static String staticStringValue(Object node) {
         return ((StringLiteral) node).getAsString();
     }
@@ -116,13 +122,23 @@ public final class FtlAstAccess {
         return node instanceof LocalLambdaExpression;
     }
 
-    /** Makes FreeMarker check {@link Thread#isInterrupted()} inside loops and directive calls of the template. */
+    /**
+     * Makes FreeMarker check {@link Thread#isInterrupted()} inside loops and directive calls of the template.
+     */
     public static void addInterruptionChecks(Template template) {
         _CoreAPI.addThreadInterruptedChecks(template);
     }
 
-    /** Whether the throwable is FreeMarker's signal that a template run was stopped by thread interruption. */
+    /**
+     * Whether the throwable is FreeMarker's signal that a template run was stopped by thread interruption.
+     */
     public static boolean isInterruption(Throwable t) {
         return t instanceof ThreadInterruptionSupportTemplatePostProcessor.TemplateProcessingThreadInterruptedException;
+    }
+
+    /**
+     * One parameter of an AST node: its FreeMarker role name (e.g. {@code "left-hand operand"}) and value.
+     */
+    public record Param(String role, Object value) {
     }
 }

@@ -14,7 +14,9 @@ import ke.co.scedar.plugins.freemarker.preview.ide.editor.FreeMarkerSplitEditor;
 import ke.co.scedar.plugins.freemarker.preview.ide.preview.PreviewController;
 import org.jetbrains.annotations.NotNull;
 
-/** Opens the template (if needed) and shows the source and preview side by side. */
+/**
+ * Opens the template (if needed) and shows the source and preview side by side.
+ */
 public final class OpenPreviewAction extends DumbAwareAction {
 
     @Override
