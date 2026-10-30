@@ -221,7 +221,7 @@ public final class SampleValues {
             return tag.substring(0, Math.min(3, tag.length())).toUpperCase(java.util.Locale.ROOT) + "-" + (1001 + index);
         }
         if (last.equals("number") || last.equals("id") || last.equals("no")) {
-            return (prefix.isEmpty() ? "NO" : prefix.substring(0, Math.min(3, prefix.length())).toUpperCase())
+            return (prefix.isEmpty() ? "NO" : prefix.substring(0, Math.min(3, prefix.length())).toUpperCase(java.util.Locale.ROOT))
                     + "-2026-" + String.format("%04d", index + 1);
         }
         if (Set.of("type", "kind", "category", "tag", "label", "group", "team", "department").contains(last)) {
