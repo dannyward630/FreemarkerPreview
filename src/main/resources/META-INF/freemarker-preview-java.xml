@@ -1,0 +1,6 @@
+<!-- Loaded only when the Java plugin is installed: project-aware sample data from Java beans and records. -->
+<idea-plugin>
+    <extensions defaultExtensionNs="ke.co.scedar.plugins.freemarker-preview">
+        <typeResolverProvider implementation="ke.co.scedar.plugins.freemarker.preview.ide.java.JavaTypeResolverProvider"/>
+    </extensions>
+</idea-plugin>

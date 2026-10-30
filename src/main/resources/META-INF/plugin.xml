@@ -1,0 +1,72 @@
+<idea-plugin>
+    <id>ke.co.scedar.plugins.freemarker-preview</id>
+    <name>FreeMarker Live Preview</name>
+    <vendor>Scedar Technologies Co. Limited</vendor>
+
+    <description><![CDATA[
+    <p>Live, side-by-side preview of Apache FreeMarker templates (<code>.ftl</code>, <code>.ftlh</code>, <code>.ftlx</code>).</p>
+    <ul>
+        <li>Split editor with the template source on the left and the rendered output on the right, refreshed as you type.</li>
+        <li>Sample data is generated automatically from the template: variables, nested properties, lists and loop
+            variables, conditions and defaults are understood using FreeMarker's own parser.</li>
+        <li>Edit the sample data as JSON; your edits are kept and new template variables are still filled in.</li>
+        <li>With the Java plugin, types declared with <code>@ftlvariable</code> or matching project classes
+            (beans and records) produce better sample values.</li>
+        <li>Readable diagnostics for syntax errors, missing values, missing includes and invalid sample data.</li>
+        <li>Previews are sandboxed: template scripts never run, Java methods are never executed, and local files are not
+            reachable; project images and stylesheets are embedded, and remote images/styles can be switched off.</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.jcef</depends>
+    <depends optional="true" config-file="freemarker-preview-java.xml">com.intellij.java</depends>
+
+    <extensionPoints>
+        <extensionPoint name="typeResolverProvider"
+                        interface="ke.co.scedar.plugins.freemarker.preview.ide.TypeResolverProvider"
+                        dynamic="true"/>
+    </extensionPoints>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileEditorProvider implementation="ke.co.scedar.plugins.freemarker.preview.ide.editor.FreeMarkerSplitEditorProvider"/>
+    </extensions>
+
+    <actions>
+        <action id="FreeMarkerPreview.Open"
+                class="ke.co.scedar.plugins.freemarker.preview.ide.actions.OpenPreviewAction"
+                text="Open FreeMarker Preview"
+                description="Show the template source and its rendered preview side by side"
+                icon="AllIcons.Actions.Preview">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+        <action id="FreeMarkerPreview.Refresh"
+                class="ke.co.scedar.plugins.freemarker.preview.ide.actions.RefreshPreviewAction"
+                text="Refresh Preview"
+                description="Render the FreeMarker preview again"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="FreeMarkerPreview.RegenerateSampleData"
+                class="ke.co.scedar.plugins.freemarker.preview.ide.actions.RegenerateSampleDataAction"
+                text="Regenerate Sample Data"
+                description="Generate sample data from the template again"
+                icon="AllIcons.Actions.Lightning"/>
+        <action id="FreeMarkerPreview.ToggleSampleData"
+                class="ke.co.scedar.plugins.freemarker.preview.ide.actions.ToggleSampleDataAction"
+                text="Show Sample Data"
+                description="Show or hide the sample data editor below the preview"
+                icon="AllIcons.Nodes.DataTables"/>
+        <action id="FreeMarkerPreview.ToggleRemoteResources"
+                class="ke.co.scedar.plugins.freemarker.preview.ide.actions.ToggleRemoteResourcesAction"
+                text="Load Remote Images and Styles"
+                description="Load images, stylesheets and fonts referenced by http(s) URLs in the preview (scripts never run)"
+                icon="AllIcons.General.Web"/>
+
+        <group id="FreeMarkerPreview.EditorToolbar">
+            <reference ref="FreeMarkerPreview.Refresh"/>
+            <reference ref="FreeMarkerPreview.RegenerateSampleData"/>
+            <reference ref="FreeMarkerPreview.ToggleSampleData"/>
+            <reference ref="FreeMarkerPreview.ToggleRemoteResources"/>
+        </group>
+    </actions>
+</idea-plugin>
