@@ -19,13 +19,14 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * A real-world report: the main template lives in {@code reports/} and imports layout/header/footer fragments from a
- * sibling {@code fragments/} folder; the fragments' macros read their own data-model variables, and the report uses
- * BigDecimal methods, the {@code ?string["..."]} format syntax, dynamic map keys and fraction thresholds.
+ * A report shaped like real-world ones (the fixture is made up): the main template lives in {@code reports/} and
+ * imports layout/header/footer fragments from a sibling {@code fragments/} folder; the fragments' macros read their own
+ * data-model variables, and the report uses BigDecimal methods, the {@code ?string["..."]} format syntax, dynamic map
+ * keys and fraction thresholds.
  */
-public class RolloverReportTest {
+public class ComparisonReportTest {
 
-    private static final String REPORT = "reports/rollover-report.ftl";
+    private static final String REPORT = "reports/comparison-report.ftl";
     private static final List<String> FILES = List.of(REPORT, "fragments/layout.ftl", "fragments/header.ftl",
             "fragments/footer.ftl");
 
@@ -47,7 +48,8 @@ public class RolloverReportTest {
     public void setUp() throws IOException {
         Map<String, String> files = new HashMap<>();
         for (String name : FILES) {
-            try (InputStream in = getClass().getResourceAsStream("/fixtures/rollover/" + name)) {
+            try (InputStream in = getClass().getResourceAsStream("/fixtures/comparison/" + name)) {
+                assertNotNull(in);
                 files.put(name, new String(in.readAllBytes(), StandardCharsets.UTF_8));
             }
         }
@@ -92,12 +94,12 @@ public class RolloverReportTest {
     @Test
     public void reportRendersWithItsFragments() {
         RenderResult result = new TemplateRenderer().render(new RenderRequest(REPORT, report, source, model));
-        if (result instanceof RenderResult.Failure failure) {
-            throw new AssertionError(failure.diagnostic().title() + " at " + failure.diagnostic().location() + ": "
-                    + failure.diagnostic().message());
+        if (result instanceof RenderResult.Failure(RenderDiagnostic diagnostic)) {
+            throw new AssertionError(diagnostic.title() + " at " + diagnostic.location() + ": "
+                    + diagnostic.message());
         }
         String out = ((RenderResult.Success) result).output();
-        assertTrue(out.contains("Organization Rollover Comparison Report"));
+        assertTrue(out.contains("Branch Comparison Report"));
         assertTrue("header fragment", out.contains("jane.doe@example.com") && out.contains("Date: <strong>"));
         assertTrue("footer fragment", out.contains("<footer"));
         assertTrue("institution names via the method stub", out.contains("Riverside Academy"));

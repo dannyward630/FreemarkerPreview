@@ -75,6 +75,16 @@ public final class TemplateAnalyzer {
     private static final Set<String> PASS_THROUGH_BUILT_INS = Set.of("no_esc", "noEsc", "esc", "if_exists",
             "ifExists", "default");
 
+    /**
+     * Built-ins that clean up or format text without changing what it means, as in
+     * {@code amount?replace(",", "")?number}: what {@code ?number} or {@code ?boolean} parses is the original value.
+     */
+    private static final Set<String> TEXT_CLEANUP_BUILT_INS = Set.of("replace", "trim", "string", "remove_beginning",
+            "remove_ending", "removeBeginning", "removeEnding", "keep_after", "keep_before", "keep_after_last",
+            "keep_before_last", "keepAfter", "keepBefore", "keepAfterLast", "keepBeforeLast", "chop_linebreak",
+            "chopLinebreak", "trim_to_null", "trimToNull", "blank_to_null", "blankToNull", "empty_to_null",
+            "emptyToNull", "lower_case", "lowerCase", "c_lower_case", "upper_case", "upperCase", "c_upper_case");
+
     private static AnalysisResult failure(String message, int line, int column) {
         return new AnalysisResult(Map.of(), Map.of(), List.of(), List.of(),
                 new AnalysisResult.ParseFailure(message, line, column));
@@ -729,6 +739,12 @@ public final class TemplateAnalyzer {
             } else {
                 arguments.forEach(this::resolve);
             }
+            if (name.equals("number") || name.equals("boolean")) {
+                VariableShape text = cleanedUpText(param(expression, "left-hand operand"));
+                if (text != null) {
+                    text.hint(name.equals("number") ? Hint.NUMBER_STRING : Hint.BOOLEAN_STRING);
+                }
+            }
             if (target == null) {
                 return null;
             }
@@ -768,6 +784,30 @@ public final class TemplateAnalyzer {
             }
             if (SAME_SEQUENCE_BUILT_INS.contains(name) || PASS_THROUGH_BUILT_INS.contains(name)) {
                 return target;
+            }
+            return null;
+        }
+
+        /**
+         * The value a chain of text clean-up built-ins starts from: {@code amount} in
+         * {@code (amount?string)?replace(",", "")}. Null when the expression is not such a chain.
+         */
+        private @Nullable VariableShape cleanedUpText(@Nullable Object expression) {
+            boolean cleanedUp = false;
+            while (expression != null && FtlAstAccess.isNode(expression) && !FtlAstAccess.isElement(expression)) {
+                Object next;
+                if (FtlAstAccess.kind(expression).equals("ParentheticalExpression")) {
+                    next = param(expression, "enclosed operand");
+                } else if (FtlAstAccess.kind(expression).equals("MethodCall") && isBuiltIn(param(expression, "callee"))) {
+                    next = param(expression, "callee");
+                } else if (isBuiltIn(expression)
+                        && TEXT_CLEANUP_BUILT_INS.contains(FtlAstAccess.nodeType(expression).substring(1))) {
+                    next = param(expression, "left-hand operand");
+                    cleanedUp = true;
+                } else {
+                    return cleanedUp ? resolve(expression) : null;
+                }
+                expression = next;
             }
             return null;
         }

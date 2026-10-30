@@ -25,8 +25,8 @@ public class TemplateRendererTest {
 
     private String renderOk(String template, String json) throws Exception {
         RenderResult result = render("page.ftl", template, Json.parseObject(json), TemplateSource.NONE);
-        if (result instanceof RenderResult.Failure failure) {
-            throw new AssertionError(failure.diagnostic().title() + ": " + failure.diagnostic().message());
+        if (result instanceof RenderResult.Failure(RenderDiagnostic diagnostic)) {
+            throw new AssertionError(diagnostic.title() + ": " + diagnostic.message());
         }
         return ((RenderResult.Success) result).output();
     }

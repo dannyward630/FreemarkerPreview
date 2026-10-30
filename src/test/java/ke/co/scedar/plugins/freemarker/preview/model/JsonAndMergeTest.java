@@ -80,6 +80,6 @@ public class JsonAndMergeTest {
         assertEquals("generated", merged.get("fresh"));
         assertTrue(merged.containsKey("removed"));
         assertNull(merged.get("removed"));
-        assertFalse("inputs are not mutated", ((Map<?, ?>) generated.get("customer")).get("name").equals("Ada"));
+        assertNotEquals("inputs are not mutated", "Ada", ((Map<?, ?>) generated.get("customer")).get("name"));
     }
 }

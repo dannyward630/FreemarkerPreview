@@ -78,6 +78,10 @@ public final class SampleModelGenerator {
         if (shape.has(Hint.NUMBER)) {
             return SampleValues.number(name, index);
         }
+        if (shape.has(Hint.NUMBER_STRING)) {
+            // Parsed with ?number after clean-up such as ?replace(",", ""); plain digits survive any of it.
+            return SampleValues.number(name, index).toString();
+        }
         if (shape.has(Hint.BOOLEAN_STRING)) {
             return "true";
         }

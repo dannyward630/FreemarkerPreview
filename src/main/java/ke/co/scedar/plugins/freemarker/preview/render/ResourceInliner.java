@@ -21,6 +21,7 @@ public final class ResourceInliner {
     private static final Pattern STYLESHEET_REL = Pattern.compile("\\brel\\s*=\\s*([\"'])?\\s*stylesheet",
             Pattern.CASE_INSENSITIVE);
     private static final int MAX_REFERENCES = 200;
+
     private ResourceInliner() {
     }
 

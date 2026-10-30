@@ -20,6 +20,7 @@ public final class VariableShape {
     private @Nullable String declaredType;
     private @Nullable String preferredName;
     private @Nullable String keyName;
+
     public VariableShape(@NotNull String name) {
         this.name = name;
     }
@@ -141,6 +142,11 @@ public final class VariableShape {
          * A string that must parse as a boolean ({@code ?boolean}).
          */
         BOOLEAN_STRING,
+        /**
+         * A string that must parse as a number: {@code ?number}, possibly after clean-up such as
+         * {@code ?replace(",", "")} or {@code ?trim}.
+         */
+        NUMBER_STRING,
         DATE,
         DATETIME,
         TIME,

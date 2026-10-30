@@ -66,6 +66,7 @@ public final class SampleValues {
             "premium", "required", "featured", "online", "subscribed", "confirmed");
     private static final Set<String> IMAGE_WORDS = Set.of("image", "img", "avatar", "photo", "picture", "logo",
             "thumbnail", "icon", "banner");
+
     private SampleValues() {
     }
 

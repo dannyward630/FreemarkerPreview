@@ -245,6 +245,7 @@ public final class TemplateRenderer {
     static final class LimitedWriter extends Writer {
         private final StringBuilder buffer = new StringBuilder();
         private final int limit;
+
         LimitedWriter(int limit) {
             this.limit = limit;
         }

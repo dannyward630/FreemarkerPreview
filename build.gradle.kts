@@ -68,6 +68,14 @@ intellijPlatform {
 }
 
 tasks {
+    processResources {
+        // License and third-party notices travel inside the plugin jar.
+        from(layout.projectDirectory) {
+            include("LICENSE", "NOTICE", "licenses/**")
+            into("META-INF")
+        }
+    }
+
     withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))

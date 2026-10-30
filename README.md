@@ -21,12 +21,12 @@ org.gradle.java.installations.paths=/snap/intellij-idea/current/jbr   # JDK 25 (
 On another machine, change or delete these lines. Without `platformLocalPath` the build downloads
 `platformVersion` (~1.6 GB), and without a JDK 25 the foojay resolver provisions one.
 
-| Task | Command |
-|---|---|
-| Run all tests | `./gradlew test` |
-| Build the installable zip | `./gradlew buildPlugin` → `build/distributions/FreemarkerPreview-0.1.0.zip` |
-| Launch a sandbox IDE with the plugin | `./gradlew runIde` |
-| Run the IntelliJ Plugin Verifier | `./gradlew verifyPlugin` |
+| Task                                 | Command                                                                     |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| Run all tests                        | `./gradlew test`                                                            |
+| Build the installable zip            | `./gradlew buildPlugin` → `build/distributions/FreemarkerPreview-0.1.0.zip` |
+| Launch a sandbox IDE with the plugin | `./gradlew runIde`                                                          |
+| Run the IntelliJ Plugin Verifier     | `./gradlew verifyPlugin`                                                    |
 
 **Install into your IDE:** *Settings → Plugins → ⚙ → Install Plugin from Disk…* → choose the zip.
 
@@ -38,11 +38,11 @@ view) → **Open FreeMarker Preview**.
 
 Toolbar actions on the split editor:
 
-| Action | What it does |
-|---|---|
-| ⟳ Refresh Preview | Renders again immediately |
-| ⚡ Regenerate Sample Data | Discards your sample-data edits and generates data from the template again |
-| ▦ Show Sample Data | Shows/hides the JSON editor below the preview |
+| Action                           | What it does                                                                    |
+|----------------------------------|---------------------------------------------------------------------------------|
+| ⟳ Refresh Preview                | Renders again immediately                                                       |
+| ⚡ Regenerate Sample Data        | Discards your sample-data edits and generates data from the template again      |
+| ▦ Show Sample Data               | Shows/hides the JSON editor below the preview                                   |
 | 🌐 Load Remote Images and Styles | Allows/blocks images, stylesheets and fonts from `http(s)` URLs (on by default) |
 
 ### Preview behavior
@@ -106,25 +106,25 @@ generates
 
 What the analyzer understands:
 
-| Construct | Effect |
-|---|---|
-| `${a.b.c}`, `a["key"]` | nested objects |
-| `#list xs as x`, `#list xs` + `#items as x`, `#list m as k, v`, `xs[0]`, `?size`, `?first`, `?join`, `?sort_by("p")` | non-empty lists (2 items) or key/value maps; `x` stays local |
-| `?filter(p -> p.age > 18)`, `?map(...)` | lambda parameter bound to the list item |
-| `#if`, `&&`, `!`, `?then`, `?string("y","n")` | booleans |
-| comparisons/arithmetic with literals, `?round`, `?c`, `#{...}` | numbers |
-| `?date`, `?time`, `?datetime`, `?iso…`, `?string("dd.MM.yyyy")` | dates (ISO strings) |
-| `?upper_case`, `?trim`, `== "x"`… | strings |
-| `x!"default"`, `(a.b)!`, `x??`, `?has_content`, `?default(...)` | marked optional; the default's type is a *weak* hint: the name wins (`reportDate!"N/A"` is a date, `institutionCount!"N/A"` a number) |
-| `#assign`/`#global`/`#local`, macro/function parameters, `#import … as ns`, `#escape x as …` | local, not part of the model (`#assign c = customer` aliases `customer`) |
-| `obj.method(...)`, `fn(...)` | method stub `"method()": value` |
-| `<@x/>` where `x` is not a macro | directive stub `"@x": ""` |
-| `#include "static/path.ftl"` | included templates are analyzed too (scope is shared) |
-| `#import "fragments/x.ftl" as x` | imported libraries are analyzed in their own namespace; variables their macros read (e.g. `${model.clientConfig.name}` in a header fragment) become part of the model |
-| `amount.divide(total, 4, "roundHalfUp")`, `x.compareTo(0)`, `.subtract`, `.doubleValue()` | `amount`/`total` are numbers (BigDecimal methods) |
-| `x?string["#,##0.00"]` | legacy call syntax, same as `x?string("#,##0.00")`: a number |
-| `byCode[code]` with a computed key | a map; keys share the key's name, so `#list m as code, v` + `other[code]` get matching keys |
-| comparisons with fractions (`rate gte 0.9`) | ratios: 0.92, 0.84, 0.67, … |
+| Construct                                                                                                            | Effect                                                                                                                                                                |
+|----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `${a.b.c}`, `a["key"]`                                                                                               | nested objects                                                                                                                                                        |
+| `#list xs as x`, `#list xs` + `#items as x`, `#list m as k, v`, `xs[0]`, `?size`, `?first`, `?join`, `?sort_by("p")` | non-empty lists (2 items) or key/value maps; `x` stays local                                                                                                          |
+| `?filter(p -> p.age > 18)`, `?map(...)`                                                                              | lambda parameter bound to the list item                                                                                                                               |
+| `#if`, `&&`, `!`, `?then`, `?string("y","n")`                                                                        | booleans                                                                                                                                                              |
+| comparisons/arithmetic with literals, `?round`, `?c`, `#{...}`                                                       | numbers                                                                                                                                                               |
+| `?date`, `?time`, `?datetime`, `?iso…`, `?string("dd.MM.yyyy")`                                                      | dates (ISO strings)                                                                                                                                                   |
+| `?upper_case`, `?trim`, `== "x"`…                                                                                    | strings                                                                                                                                                               |
+| `x!"default"`, `(a.b)!`, `x??`, `?has_content`, `?default(...)`                                                      | marked optional; the default's type is a *weak* hint: the name wins (`reportDate!"N/A"` is a date, `institutionCount!"N/A"` a number)                                 |
+| `#assign`/`#global`/`#local`, macro/function parameters, `#import … as ns`, `#escape x as …`                         | local, not part of the model (`#assign c = customer` aliases `customer`)                                                                                              |
+| `obj.method(...)`, `fn(...)`                                                                                         | method stub `"method()": value`                                                                                                                                       |
+| `<@x/>` where `x` is not a macro                                                                                     | directive stub `"@x": ""`                                                                                                                                             |
+| `#include "static/path.ftl"`                                                                                         | included templates are analyzed too (scope is shared)                                                                                                                 |
+| `#import "fragments/x.ftl" as x`                                                                                     | imported libraries are analyzed in their own namespace; variables their macros read (e.g. `${model.clientConfig.name}` in a header fragment) become part of the model |
+| `amount.divide(total, 4, "roundHalfUp")`, `x.compareTo(0)`, `.subtract`, `.doubleValue()`                            | `amount`/`total` are numbers (BigDecimal methods)                                                                                                                     |
+| `x?string["#,##0.00"]`                                                                                               | legacy call syntax, same as `x?string("#,##0.00")`: a number                                                                                                          |
+| `byCode[code]` with a computed key                                                                                   | a map; keys share the key's name, so `#list m as code, v` + `other[code]` get matching keys                                                                           |
+| comparisons with fractions (`rate gte 0.9`)                                                                          | ratios: 0.92, 0.84, 0.67, …                                                                                                                                           |
 
 Values are picked by name and context and are deterministic: `email` → `jane.doe@example.com`, `company.name` →
 `Acme Corp`, `product.name` → `Laptop`, `createdAt` → `2026-01-15T09:30:00`, `total` → `85000`, `isVip` → `true`,
@@ -150,13 +150,13 @@ The JSON editor under the preview shows the effective data and its mode:
 
 JSON → FreeMarker conventions:
 
-| JSON | In the template |
-|---|---|
-| `"2026-01-15"`, `"2026-01-15T09:30:00"`, `"09:30:00"` | both a date and a string (`?string("yyyy")`, `?date`, `?is_string` all work) |
-| `"fmt": { "money()": "$1.00" }` | `${fmt.money(order.total)}` returns `$1.00` for any arguments |
-| `"@layout": "<header/>"` | `<@layout>…</@layout>` prints the value, then the nested content |
-| `null` | missing value |
-| numbers | numbers that also answer common `BigDecimal` methods (`divide`, `multiply`, `add`, `subtract`, `compareTo`, `setScale`, `doubleValue`, …), like a BeansWrapper-configured app. These are a fixed list implemented by the plugin; no Java method is invoked |
+| JSON                                                  | In the template                                                                                                                                                                                                                                            |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `"2026-01-15"`, `"2026-01-15T09:30:00"`, `"09:30:00"` | both a date and a string (`?string("yyyy")`, `?date`, `?is_string` all work)                                                                                                                                                                               |
+| `"fmt": { "money()": "$1.00" }`                       | `${fmt.money(order.total)}` returns `$1.00` for any arguments                                                                                                                                                                                              |
+| `"@layout": "<header/>"`                              | `<@layout>…</@layout>` prints the value, then the nested content                                                                                                                                                                                           |
+| `null`                                                | missing value                                                                                                                                                                                                                                              |
+| numbers                                               | numbers that also answer common `BigDecimal` methods (`divide`, `multiply`, `add`, `subtract`, `compareTo`, `setScale`, `doubleValue`, …), like a BeansWrapper-configured app. These are a fixed list implemented by the plugin; no Java method is invoked |
 
 ### Project-aware inference (Java)
 
@@ -164,8 +164,8 @@ When the Java plugin is installed (an optional dependency) and indexing has fini
 
 1. `<#-- @ftlvariable name="invoice" type="com.acme.Invoice" -->` declarations are resolved (generics such as
    `java.util.List<com.acme.Order>` work).
-2. Otherwise, a variable whose properties the template reads is matched to a project class by name
-   (`customer` → `Customer`, list `orders` → `Order`), but **only if exactly one class has that name**.
+2. Otherwise, a variable whose properties the template reads is matched to a project class by name (`customer` →
+   `Customer`, list `orders` → `Order`), but **only if exactly one class has that name**.
 
 Property types come from getters (`getX`/`isX`), record components and called methods. Enums give their real
 constants, dates/numbers/booleans/collections/maps map accordingly. Only properties the template references are
@@ -201,6 +201,7 @@ Supported: everything FreeMarker 2.3.35 parses with default settings, including 
 syntax (auto-detected) and `${…}` interpolation.
 
 Known limitations:
+
 - Square-bracket *interpolation* `[=x]` is not enabled.
 - Your application's FreeMarker `Configuration` is not read: shared variables, auto-imports/includes, custom number or
   date formats, locale, custom object wrappers and Spring settings are ignored. The preview uses defaults and the
@@ -219,18 +220,18 @@ Known limitations:
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| `.ftl` opens without a preview | Check the plugin is enabled. If another plugin opens the file with a different editor, choose the **FreeMarker** tab or use *Open FreeMarker Preview*. |
-| "JCEF is not available… showing the generated HTML instead" | Your IDE runtime lacks JCEF (some remote/thin-client setups). Use a JetBrains Runtime with JCEF. |
-| "Missing included template" | The include path resolves against the template root (see above); check the folder layout or use `ignore_missing=true`. |
+| Symptom                                                     | Fix                                                                                                                                                                                                                                                                                                                                    |
+|-------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `.ftl` opens without a preview                              | Check the plugin is enabled. If another plugin opens the file with a different editor, choose the **FreeMarker** tab or use *Open FreeMarker Preview*.                                                                                                                                                                                 |
+| "JCEF is not available… showing the generated HTML instead" | Your IDE runtime lacks JCEF (some remote/thin-client setups). Use a JetBrains Runtime with JCEF.                                                                                                                                                                                                                                       |
+| "Missing included template"                                 | The include path resolves against the template root (see above); check the folder layout or use `ignore_missing=true`.                                                                                                                                                                                                                 |
 | Preview says "Still preparing the preview… Current step: …" | The step named is still running after 8 s. *Generating sample data (Java type lookup)* waits for indexing to finish. Use Refresh Preview; if it persists, check the IDE log (Help → Show Log), or enable debug logging for `#ke.co.scedar.plugins.freemarker.preview` (Help → Diagnostic Tools → Debug Log Settings) to see each step. |
-| Status says "template path resolved leniently" | A fragment was found in a parent folder, not at its exact path. The preview works, but verify the path in your application. |
-| Images don't show | Remote: check the 🌐 toggle. Local: the file must be inside the project, e.g. under `static/`, `public/` or next to the template. |
-| "Missing value" | Add the value in the Sample Data panel, or give the expression a default (`${x!""}`). |
-| Java types not picked up | Wait for indexing to finish; use `@ftlvariable` with a fully-qualified type; name-matching needs a unique class name. |
-| Sample data edits seem ignored | Check the header says *Custom sample data* and the JSON is valid (invalid JSON shows a diagnostic). |
-| Build fails: can't find JDK 25 | Set `org.gradle.java.installations.paths` to a JDK 25, or remove it to let Gradle provision one. |
+| Status says "template path resolved leniently"              | A fragment was found in a parent folder, not at its exact path. The preview works, but verify the path in your application.                                                                                                                                                                                                            |
+| Images don't show                                           | Remote: check the 🌐 toggle. Local: the file must be inside the project, e.g. under `static/`, `public/` or next to the template.                                                                                                                                                                                                      |
+| "Missing value"                                             | Add the value in the Sample Data panel, or give the expression a default (`${x!""}`).                                                                                                                                                                                                                                                  |
+| Java types not picked up                                    | Wait for indexing to finish; use `@ftlvariable` with a fully-qualified type; name-matching needs a unique class name.                                                                                                                                                                                                                  |
+| Sample data edits seem ignored                              | Check the header says *Custom sample data* and the JSON is valid (invalid JSON shows a diagnostic).                                                                                                                                                                                                                                    |
+| Build fails: can't find JDK 25                              | Set `org.gradle.java.installations.paths` to a JDK 25, or remove it to let Gradle provision one.                                                                                                                                                                                                                                       |
 
 ## Architecture
 
@@ -247,3 +248,13 @@ ide/java/  JavaTypeResolver (PSI; loaded via optional dependency on com.intellij
 
 The core (`engine`, `analysis`, `model`, `render`) has no IntelliJ dependencies and is unit-tested directly.
 
+## License
+
+FreeMarker Live Preview is licensed under the [BSD 3-Clause License](LICENSE).
+
+The plugin bundles [Apache FreeMarker](https://freemarker.apache.org/) 2.3.35, licensed under the
+[Apache License 2.0](licenses/freemarker-LICENSE.txt). Attributions and the other tools used to build and test the
+plugin
+are listed in [NOTICE](NOTICE). Both files are also packaged in the plugin jar under `META-INF/`. "Apache FreeMarker" is
+a
+trademark of the Apache Software Foundation; this project is not affiliated with it.
