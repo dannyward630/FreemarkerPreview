@@ -16,6 +16,8 @@
         <li>Previews are sandboxed: template scripts never run, Java methods are never executed, and local files are not
             reachable; project images and stylesheets are embedded, and remote images/styles can be switched off.</li>
     </ul>
+    <p>Bundles Apache FreeMarker, licensed under the Apache License 2.0; see the NOTICE file in the plugin.
+        Not affiliated with the Apache Software Foundation.</p>
     ]]></description>
 
     <change-notes><![CDATA[
@@ -24,6 +26,11 @@
         <li>Fixed: only the first preview page ever appeared. Opening another template stayed on "Preparing preview…",
             and Refresh Preview and template edits did not update the page, although the status line said it was
             rendered.</li>
+        <li>Fixed: the preview could show "Your file couldn't be accessed" (ERR_FILE_NOT_FOUND), especially after
+            Reload.</li>
+        <li>Fixed: values cleaned up and parsed as numbers, such as <code>amount?replace(",", "")?number</code>, got
+            text sample data and failed with "Can't convert this string to number".</li>
+        <li>License and third-party notices (Apache FreeMarker) are now included in the plugin.</li>
     </ul>
     <h3>0.1.0</h3>
     <ul>

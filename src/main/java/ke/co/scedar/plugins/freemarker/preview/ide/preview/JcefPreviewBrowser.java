@@ -3,14 +3,15 @@ package ke.co.scedar.plugins.freemarker.preview.ide.preview;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefBrowser;
-import com.intellij.ui.jcef.JBCefFileSchemeHandlerFactory;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
-import org.cef.handler.CefRequestHandlerAdapter;
-import org.cef.handler.CefResourceRequestHandler;
-import org.cef.handler.CefResourceRequestHandlerAdapter;
+import org.cef.callback.CefCallback;
+import org.cef.handler.*;
 import org.cef.misc.BoolRef;
+import org.cef.misc.IntRef;
+import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
+import org.cef.network.CefResponse;
 
 import javax.swing.*;
 
@@ -26,15 +27,11 @@ final class JcefPreviewBrowser implements PreviewBrowser {
             com.intellij.openapi.diagnostic.Logger.getInstance(JcefPreviewBrowser.class);
 
     /**
-     * {@link JBCefBrowser#loadHTML} serves pages from this in-memory pseudo location.
+     * The preview page is served by {@link RequestGuard} itself, not with {@link JBCefBrowser#loadHTML}: that silently
+     * drops a page whose URL equals the previous one, and its page store missed pages on reload (ERR_FILE_NOT_FOUND).
+     * Each load gets a new {@code ?v=} so it is never mistaken for the page already shown; a reload shows the newest.
      */
-    private static final String PAGE_PREFIX = JBCefFileSchemeHandlerFactory.LOADHTML_RANDOM_URL_PREFIX;
-    /**
-     * {@link JBCefBrowser#loadHTML} silently drops a page whose URL equals the previously requested one (even after that
-     * load finished), so with one URL only the first page ever showed. Pages alternate between two URLs: never the last
-     * one requested, and the platform keeps only two pages per browser.
-     */
-    private static final String[] PAGE_URLS = {PAGE_PREFIX + "freemarker-preview-a.html", PAGE_PREFIX + "freemarker-preview-b.html"};
+    private static final String PAGE_URL = "file:///freemarker-preview/preview.html";
 
     private final JBCefBrowser browser;
     private volatile boolean remoteAllowed;
@@ -44,7 +41,7 @@ final class JcefPreviewBrowser implements PreviewBrowser {
     private volatile @org.jetbrains.annotations.Nullable String latestHtml;
     private volatile boolean created;
     private volatile boolean disposed;
-    private int pageIndex;
+    private long pageVersion;
 
     JcefPreviewBrowser() {
         browser = JBCefBrowser.createBuilder().setEnableOpenDevToolsMenuItem(false).build();
@@ -68,7 +65,7 @@ final class JcefPreviewBrowser implements PreviewBrowser {
     }
 
     private static boolean isAllowed(String url) {
-        return url.startsWith(PAGE_PREFIX) || url.startsWith("data:") || url.equals("about:blank");
+        return url.startsWith(PAGE_URL + "?") || url.startsWith("data:") || url.equals("about:blank");
     }
 
     private static boolean isRemoteAsset(CefRequest request) {
@@ -97,8 +94,7 @@ final class JcefPreviewBrowser implements PreviewBrowser {
     }
 
     private void loadNow(String html) {
-        pageIndex ^= 1;
-        browser.loadHTML(html, PAGE_URLS[pageIndex]);
+        browser.getCefBrowser().loadURL(PAGE_URL + "?v=" + ++pageVersion);
     }
 
     @Override
@@ -114,6 +110,12 @@ final class JcefPreviewBrowser implements PreviewBrowser {
     private static final class RequestGuard extends CefRequestHandlerAdapter {
         private final JcefPreviewBrowser owner;
         private final CefResourceRequestHandler resources = new CefResourceRequestHandlerAdapter() {
+            @Override
+            public CefResourceHandler getResourceHandler(CefBrowser browser, CefFrame frame, CefRequest request) {
+                String html = owner.latestHtml;
+                return html != null && request.getURL().startsWith(PAGE_URL + "?") ? new PageHandler(html) : null;
+            }
+
             @Override
             public boolean onBeforeResourceLoad(CefBrowser browser, CefFrame frame, CefRequest request) {
                 boolean allowed = isAllowed(request.getURL()) || owner.remoteAllowed && isRemoteAsset(request);
@@ -149,6 +151,44 @@ final class JcefPreviewBrowser implements PreviewBrowser {
                                                                    boolean isDownload, String requestInitiator,
                                                                    BoolRef disableDefaultHandling) {
             return resources;
+        }
+    }
+
+    /**
+     * Serves the newest preview page for every request to {@link #PAGE_URL}.
+     */
+    private static final class PageHandler extends CefResourceHandlerAdapter {
+        private final byte[] bytes;
+        private int offset;
+
+        PageHandler(String html) {
+            bytes = html.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public boolean processRequest(CefRequest request, CefCallback callback) {
+            callback.Continue();
+            return true;
+        }
+
+        @Override
+        public void getResponseHeaders(CefResponse response, IntRef responseLength, StringRef redirectUrl) {
+            response.setMimeType("text/html");
+            response.setStatus(200);
+            responseLength.set(bytes.length);
+        }
+
+        @Override
+        public boolean readResponse(byte[] dataOut, int bytesToRead, IntRef bytesRead, CefCallback callback) {
+            int count = Math.min(bytesToRead, bytes.length - offset);
+            if (count <= 0) {
+                bytesRead.set(0);
+                return false;
+            }
+            System.arraycopy(bytes, offset, dataOut, 0, count);
+            offset += count;
+            bytesRead.set(count);
+            return true;
         }
     }
 }

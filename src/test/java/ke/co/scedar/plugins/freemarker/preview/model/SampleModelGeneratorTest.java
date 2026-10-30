@@ -49,6 +49,21 @@ public class SampleModelGeneratorTest {
     }
 
     @Test
+    public void textParsedAsNumberAfterCleanUpIsANumericString() {
+        // Real-world reports sum amounts the application sends as formatted text.
+        Map<String, Object> model = generate("""
+                <#list transactions as transaction>
+                    <#assign total = total!0 + (transaction.amount?replace(",", "")?number)>
+                </#list>
+                <#list classes as class>${(class.balance?string)?replace(",", "")?trim?number}</#list>
+                ${flag?trim?boolean?then("yes", "no")}
+                """);
+        assertEquals("85000", at(model, "transactions", 0, "amount"));
+        assertEquals("85000", at(model, "classes", 0, "balance"));
+        assertEquals("true", model.get("flag"));
+    }
+
+    @Test
     public void infersScalarTypesFromUsage() {
         Map<String, Object> model = generate("""
                 <#if subscribed>yes</#if> ${visits + 1} ${joined?date} ${meeting?time} ${updated?datetime}
