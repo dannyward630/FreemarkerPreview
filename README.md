@@ -201,11 +201,6 @@ Supported: everything FreeMarker 2.3.35 parses with default settings, including 
 syntax (auto-detected) and `${…}` interpolation.
 
 Known limitations:
-
-- **Not interactively click-tested by me.** Automated tests run headless, so they exercise the real split editor,
-  controller, refresh, sample-data editing and persistence through the non-JCEF fallback view. `runIde` was verified
-  to load the plugin without errors, but I did not manually click through the JCEF preview. The scroll-position
-  keeper (via `window.name`) is untested inside JCEF.
 - Square-bracket *interpolation* `[=x]` is not enabled.
 - Your application's FreeMarker `Configuration` is not read: shared variables, auto-imports/includes, custom number or
   date formats, locale, custom object wrappers and Spring settings are ignored. The preview uses defaults and the
@@ -252,7 +247,3 @@ ide/java/  JavaTypeResolver (PSI; loaded via optional dependency on com.intellij
 
 The core (`engine`, `analysis`, `model`, `render`) has no IntelliJ dependencies and is unit-tested directly.
 
-**Testing notes:** 67 tests (58 unit + 9 platform integration), including a regression test built from a real
-report with layout/header/footer fragments (`src/test/resources/fixtures/rollover`). The test sandbox disables
-`com.intellij.modules.ultimate`: the unified IDEA distribution's licensing module fails to start under the headless
-test framework, independent of this plugin (see `prepareTestSandbox` in `build.gradle.kts`).
